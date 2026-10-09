@@ -73,6 +73,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
     <div id="money">0 ₽</div>
     <div class="sub" id="income"></div>
     <div class="sub" id="career"></div>
+    <div class="sub" id="salary" style="color:var(--money)"></div>
     <div class="day"><i id="dayBar"></i></div>
     <div class="sub" id="dayTxt"></div>
   </div>
@@ -110,30 +111,32 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 const PROFILE = {
   job: 'Повар',
   currency: '₽',
-  dayLength: 30,          // секунд реального времени на один игровой день
-  baseExpenses: 400,      // аренда, еда, транспорт в день
-  expensesPerCareerLvl: 120,
+  dayLength: 20,          // секунд реального времени на один игровой день
+  baseExpenses: 900,      // аренда 12 000 + остальное 15 000 в месяц = 900 в день
+  expensesPerCareerLvl: 100,
   expensesPerAsset: 15,
-  wages: [100, 160, 260, 420, 700],
+  monthSalary: [57000, 70000, 90000, 120000, 180000], // оклад в месяц
+  clicksPerMonth: 90,     // 15 смен (график 3/3) × 6 действий
   careerNames: ['Повар', 'Повар-универсал', 'Су-шеф', 'Шеф-повар', 'Бренд-шеф'],
   skillNeeded: [0, 10, 25, 45, 70],
-  partnerName: 'Партнёр',
+  partnerName: 'Анастасия',
+  wakeHour: 8.5,          // подъём в 8:30
 };
 const UPGRADES = [
-  {id:'deposit', ic:'🏦', n:'Накопительный счёт', d:'Копейка рубль бережёт', base:500, inc:15},
-  {id:'blog',    ic:'📹', n:'Кулинарный канал',   d:'Рецепты и закулисье кухни', base:2000, inc:60},
-  {id:'stocks',  ic:'📈', n:'Акции и ИИС',        d:'Пусть деньги работают', base:5000, inc:160},
-  {id:'catering',ic:'🍱', n:'Домашний кейтеринг', d:'Заказы на выходные', base:12000, inc:400},
-  {id:'flat',    ic:'🏠', n:'Квартира в аренду',  d:'Стабильный арендный поток', base:40000, inc:1200},
-  {id:'truck',   ic:'🚚', n:'Фудтрак',            d:'Своя точка на колёсах', base:100000, inc:3000},
-  {id:'rest',    ic:'🍽️', n:'Свой ресторан',      d:'Мечта любого повара', base:400000, inc:10000},
+  {id:'deposit', ic:'🏦', n:'Накопительный счёт', d:'Копейка рубль бережёт', base:5000, inc:50},
+  {id:'blog',    ic:'📹', n:'Кулинарный канал',   d:'Рецепты (и провалы с шаурмой)', base:12000, inc:150},
+  {id:'stocks',  ic:'📈', n:'Акции и ИИС',        d:'Пусть деньги работают', base:30000, inc:350},
+  {id:'catering',ic:'🍱', n:'Домашний кейтеринг', d:'Заказы на выходные', base:60000, inc:700},
+  {id:'flat',    ic:'🏠', n:'Квартира в аренду',  d:'Стабильный арендный поток', base:200000, inc:1800},
+  {id:'truck',   ic:'🚚', n:'Фудтрак с шаурмой',  d:'Ту самую, которая получается', base:450000, inc:4000},
+  {id:'rest',    ic:'🍽️', n:'Свой ресторан',      d:'Мечта любого повара', base:1500000, inc:12000},
 ];
-const COST_GROWTH = 1.18;
+const COST_GROWTH = 1.15;
 
 /* ====== Состояние ====== */
-const SAVE_KEY = 'lifeTycoon_cook_v1';
+const SAVE_KEY = 'lifeTycoon_cook_v2';
 function newState(){
-  return {money:300, energy:100, health:80, love:70, procr:20, skill:0, career:0,
+  return {money:15000, pending:0, payDelay:0, shawaOk:0, shawaFail:0, energy:100, health:80, love:70, procr:20, skill:0, career:0,
     day:1, dayT:0, owned:{}, log:[], lastAct:Date.now(), cd:{}, won:false, over:false, passiveAcc:0};
 }
 let S = load() || newState();
@@ -150,31 +153,50 @@ const upCost=u=>Math.round(u.base*Math.pow(COST_GROWTH,owned(u.id)));
 const passive=()=>UPGRADES.reduce((a,u)=>a+u.inc*owned(u.id),0);
 const assets=()=>UPGRADES.reduce((a,u)=>a+owned(u.id),0);
 const expenses=()=>Math.round(PROFILE.baseExpenses+PROFILE.expensesPerCareerLvl*S.career+PROFILE.expensesPerAsset*assets());
-const wage=()=>PROFILE.wages[S.career]*(1+S.skill*0.01);
+const wage=()=>PROFILE.monthSalary[S.career]/PROFILE.clicksPerMonth*(1+S.skill*0.01);
+const isWork=()=>((S.day-1)%6)<3;
 function say(t){ S.log.unshift(`День ${S.day}: ${t}`); S.log.length=Math.min(S.log.length,30); }
 
 /* ====== Действия ====== */
+const SHAWA_FAILS=['Шаурма развалилась в руках. Лаваш победил.','Соус вытек в тапочки. Шаурма — нет.','Получился очень дорогой рулет с грустью.','Анастасия пробует: «Ну… неплохо…» (нет).','Лаваш порвался. Опять.'];
 const ACTIONS = [
-  {id:'work', main:true, ic:'🔪', n:()=>`Смена на кухне`, d:()=>`+${fmt(effWage())} · −8 энергии`, cd:700,
-   can:()=>S.energy>=8,
-   run(){ const w=effWage(); S.money+=w; S.energy-=8; S.procr=clamp(S.procr-2); S.skill+=0.2; return {float:'+'+fmt(w)}; }},
+  {id:'work', main:true, ic:'🔪', n:()=>isWork()?'Смена на кухне':'Сегодня выходной!', d:()=>isWork()?`+${fmt(effWage())} к зарплате · −8 энергии`:'График 3/3: сегодня Майнкрафт, а не плита', cd:700,
+   can:()=>isWork() && S.energy>=8,
+   run(){ const w=effWage(); S.pending+=w; S.energy-=8; S.procr=clamp(S.procr-2); S.skill+=0.2; return {float:'+'+fmt(w)}; }},
+  {id:'coffee', ic:'☕', n:()=>'Капучино с Анастасией', d:()=>`Утренний ритуал · −300 ${PROFILE.currency}`, cd:5000,
+   can:()=>S.money>=300,
+   run(){ S.money-=300;
+     const morning=S.dayT<PROFILE.dayLength*0.25;
+     S.love=clamp(S.love+(morning?9:3)); S.energy=clamp(S.energy+(morning?12:4));
+     if(!morning) say('Капучино после обеда — это уже не ритуал, а кофеиновая зависимость.');
+     return {float:morning?'☕ +9 💕':'☕ +3 💕'}; }},
+  {id:'mine', ic:'⛏️', n:()=>'Майнкрафт с Анастасией', d:()=>'Вечерний кооп · +15 отношений · −10 энергии', cd:4000,
+   can:()=>S.energy>=10,
+   run(){ S.energy-=10; S.love=clamp(S.love+15); S.procr=clamp(S.procr+3);
+     const r=Math.random();
+     if(r<0.25) say('Крипер взорвал дом, который строили два часа. Анастасия смеётся, вы — нет.');
+     else if(r<0.45) say('Нашли алмазы! Тут же уронили их в лаву. Классика.');
+     else if(r<0.6) say('Анастасия построила замок лучше вашего. Вы «просто делали фундамент».');
+     return {float:'⛏️ +15 💕'}; }},
+  {id:'shawa', ic:'🌯', n:()=>`Сделать шаурму (удач ${S.shawaOk} / провалов ${S.shawaFail})`, d:()=>`−200 ${PROFILE.currency} на продукты · шанс ${Math.round(shawaChance()*100)}%`, cd:3000,
+   can:()=>S.energy>=10 && S.money>=200,
+   run(){ S.money-=200; S.energy-=10; S.skill+=0.5;
+     if(Math.random()<shawaChance()){ S.shawaOk++; S.money+=800; say('Шаурма УДАЛАСЬ! Соседи платят 800. Записали рецепт на салфетке.'); return {float:'🌯 +800'}; }
+     S.shawaFail++; say(SHAWA_FAILS[Math.floor(Math.random()*SHAWA_FAILS.length)]); return {float:'🌯 💥'}; }},
   {id:'sleep', ic:'😴', n:()=>'Выспаться', d:()=>'+50 энергии · пропуск времени', cd:6000,
    can:()=>true,
-   run(){ S.energy=clamp(S.energy+50); S.health=clamp(S.health+2); advance(7); say('Выспались. Мир стал чуть добрее.'); return {float:'💤'}; }},
+   run(){ S.energy=clamp(S.energy+50); S.health=clamp(S.health+2); advance(5); say('Выспались. Будильник на 8:30 всё равно сильнее.'); return {float:'💤'}; }},
   {id:'gym', ic:'🏋️', n:()=>'Тренировка', d:()=>'+6 здоровья · −15 энергии', cd:3000,
    can:()=>S.energy>=15,
    run(){
      if(S.procr>50 && Math.random()<0.4){ S.procr=clamp(S.procr-8); say('Собирались в зал, но «начну с понедельника».'); return {float:'😅 завтра'}; }
      S.energy-=15; S.health=clamp(S.health+6); S.procr=clamp(S.procr-5); return {float:'+6 ❤️'}; }},
-  {id:'partner', ic:'🥰', n:()=>`Время с партнёром`, d:()=>`+12 отношений · −100 ${PROFILE.currency}`, cd:3000,
-   can:()=>S.energy>=10 && S.money>=100,
-   run(){ S.money-=100; S.energy-=10; S.love=clamp(S.love+12); S.procr=clamp(S.procr-3); return {float:'+12 💕'}; }},
-  {id:'learn', ic:'📚', n:()=>'Курс / новые рецепты', d:()=>`+1.5 навыка · −80 ${PROFILE.currency}`, cd:3000,
-   can:()=>S.energy>=12 && S.money>=80,
-   run(){ S.money-=80; S.energy-=12; S.skill+=1.5; return {float:'+1.5 🎓'}; }},
-  {id:'fast', ic:'🍔', n:()=>'Фастфуд после смены', d:()=>`+20 энергии · −4 здоровья · −40 ${PROFILE.currency}`, cd:2000,
-   can:()=>S.money>=40,
-   run(){ S.money-=40; S.energy=clamp(S.energy+20); S.health=clamp(S.health-4); say('Повар, а ужин — из ближайшей забегаловки. Классика.'); return {float:'🍔'}; }},
+  {id:'learn', ic:'📚', n:()=>'Курс / новые рецепты', d:()=>`+1.5 навыка · −500 ${PROFILE.currency}`, cd:3000,
+   can:()=>S.energy>=12 && S.money>=500,
+   run(){ S.money-=500; S.energy-=12; S.skill+=1.5; return {float:'+1.5 🎓'}; }},
+  {id:'fast', ic:'🍔', n:()=>'Фастфуд после смены', d:()=>`+20 энергии · −4 здоровья · −300 ${PROFILE.currency}`, cd:2000,
+   can:()=>S.money>=300,
+   run(){ S.money-=300; S.energy=clamp(S.energy+20); S.health=clamp(S.health-4); say('Повар, а ужин — из ближайшей забегаловки. Классика.'); return {float:'🍔'}; }},
   {id:'phone', ic:'📱', n:()=>'Полистать ленту', d:()=>'«Ещё пять минуточек» · +15 прокрастинации', cd:1500,
    can:()=>true,
    run(){ S.procr=clamp(S.procr+15); S.energy=clamp(S.energy-2); return {float:'📱 ...'}; }},
@@ -182,6 +204,7 @@ const ACTIONS = [
    can:()=>S.energy>=5,
    run(){ S.procr=clamp(S.procr-25); S.energy-=5; return {float:'✔️ план'}; }},
 ];
+function shawaChance(){ return Math.min(0.85,0.12+S.skill*0.01); }
 function effWage(){ let w=wage(); if(S.procr>60) w*=0.6; if(S.health<30) w*=0.7; return w; }
 
 function doAction(a, ev){
@@ -221,17 +244,30 @@ function tick(){
 function endDay(){
   const e=expenses();
   S.money-=e; S.day++;
+  if(S.payDelay>0){ S.payDelay--; if(S.payDelay===0) pay(); }
+  const payday=(S.day%30===1);
   S.love=clamp(S.love-3); S.health=clamp(S.health-1);
   if(S.money<0){ S.procr=clamp(S.procr+5); S.health=clamp(S.health-2); say(`Долги давят. Расходы за день: ${fmt(e)}.`); }
   else say(`Расходы за день: ${fmt(e)}.`);
   checkState();
-  if(!S.over && Math.random()<0.4) showEvent();
+  if(payday && !S.over){
+    if(Math.random()<0.5){ S.payDelay=3+Math.floor(Math.random()*5); salaryDelayed(); }
+    else pay();
+  } else if(!S.over && Math.random()<0.4) showEvent();
   save();
+}
+function pay(){ if(S.pending<=0) return; say(`Зарплата пришла: ${fmt(S.pending)}. Невероятно, но факт.`); S.money+=S.pending; S.pending=0; }
+function salaryDelayed(){
+  say('Зарплату опять «задерживают».');
+  openModal('💸 Зарплату не дают',`Бухгалтерия: «Деньги будут через ${S.payDelay} дн., там что-то с банком». К выплате: ${fmt(S.pending)}.`,[
+    {t:'Ждать и питаться макаронами',s:'−3 здоровья',f:()=>{S.health=clamp(S.health-3);say('Макароны, как всегда, спасли ситуацию.');}},
+    {t:'Идти к бухгалтеру и требовать',s:'40% сразу · −15 энергии · −5 здоровья (нервы)',f:()=>{const x=S.pending*0.4;S.money+=x;S.pending-=x;S.energy=clamp(S.energy-15);S.health=clamp(S.health-5);say(`Выбили ${fmt(x)}. Бухгалтерша смотрела как на врага.`);}},
+    {t:'Занять у Анастасии',s:'+10 000 · −12 отношений («мы же копили!»)',f:()=>{S.money+=10000;S.love=clamp(S.love-12);say('Заняли у Анастасии. Обещали отдать «со дня на день».');}}]);
 }
 function checkState(){
   if(S.health<=0){
-    S.health=40; S.energy=50; S.money-=300; S.dayT=0; S.day+=2;
-    say('Выгорание. Пара дней в больнице, −300. Берегите себя.');
+    S.health=40; S.energy=50; S.money-=3000; S.dayT=0; S.day+=2;
+    say('Выгорание. Пара дней в больнице, −3000. Берегите себя.');
   }
   if(S.love<=0 && !S.over){
     S.over=true;
@@ -249,27 +285,36 @@ function checkState(){
 /* ====== События ====== */
 const EVENTS = [
   {t:'🎬 Партнёр зовёт в кино',p:'«Давай сегодня куда-нибудь выберемся?»',c:[
-    {t:'Пойти',s:`−150 ${PROFILE.currency}, −10 энергии, +15 отношений`,f(){S.money-=150;S.energy=clamp(S.energy-10);S.love=clamp(S.love+15);}},
+    {t:'Пойти',s:`−1500 ${PROFILE.currency}, −10 энергии, +15 отношений`,f(){S.money-=1500;S.energy=clamp(S.energy-10);S.love=clamp(S.love+15);}},
     {t:'«Устал(а), останусь с телефоном»',s:'−10 отношений, +15 прокрастинации',f(){S.love=clamp(S.love-10);S.procr=clamp(S.procr+15);}}]},
   {t:'🍕 Скидка на доставку',p:'Приложение шепчет: «Только сегодня −50%».',c:[
-    {t:'Заказать пиццу',s:`−100 ${PROFILE.currency}, +25 энергии, −8 здоровья`,f(){S.money-=100;S.energy=clamp(S.energy+25);S.health=clamp(S.health-8);}},
+    {t:'Заказать пиццу',s:`−700 ${PROFILE.currency}, +25 энергии, −8 здоровья`,f(){S.money-=700;S.energy=clamp(S.energy+25);S.health=clamp(S.health-8);}},
     {t:'Приготовить дома',s:'−10 энергии, +4 здоровья (вы же повар!)',f(){S.energy=clamp(S.energy-10);S.health=clamp(S.health+4);}}]},
   {t:'⏱️ Сверхурочные',p:'Шеф просит выйти на подмену.',c:[
-    {t:'Согласиться',s:`+600 ${PROFILE.currency}, −30 энергии`,f(){S.money+=600;S.energy=clamp(S.energy-30);}},
+    {t:'Согласиться',s:`+3000 ${PROFILE.currency}, −30 энергии`,f(){S.money+=3000;S.energy=clamp(S.energy-30);}},
     {t:'Отказаться',s:'Ничего не меняется',f(){}}]},
   {t:'🏃 Друг зовёт на пробежку',p:'«Утром, в семь. Без отговорок!»',c:[
     {t:'Побежать',s:'+10 здоровья, −15 энергии',f(){S.health=clamp(S.health+10);S.energy=clamp(S.energy-15);}},
     {t:'«С завтрашнего дня»',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
   {t:'🤧 Простуда',p:'Кухня — сквозняки и пар. Вы заболели.',c:[
-    {t:'Купить лекарства',s:`−200 ${PROFILE.currency}, −15 здоровья`,f(){S.money-=200;S.health=clamp(S.health-15);}}]},
+    {t:'Купить лекарства',s:`−1500 ${PROFILE.currency}, −15 здоровья`,f(){S.money-=1500;S.health=clamp(S.health-15);}}]},
   {t:'💐 Годовщина',p:'Вы вспомнили про дату… или нет?',c:[
-    {t:'Подарок и ужин',s:`−500 ${PROFILE.currency}, +25 отношений`,f(){S.money-=500;S.love=clamp(S.love+25);}},
+    {t:'Подарок и ужин',s:`−4000 ${PROFILE.currency}, +25 отношений`,f(){S.money-=4000;S.love=clamp(S.love+25);}},
     {t:'Забыть',s:'−25 отношений',f(){S.love=clamp(S.love-25);}}]},
   {t:'💡 Идея нового блюда',p:'Придумали сочетание, которого нет ни в одной книге.',c:[
     {t:'Записать в блог',s:'+3 навыка, −5 энергии',f(){S.skill+=3;S.energy=clamp(S.energy-5);}},
     {t:'Забыть к вечеру',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
-  {t:'🎁 Премия от шефа',p:'Заметили вашу работу.',c:[
-    {t:'Принять',s:`+500 ${PROFILE.currency}`,f(){S.money+=500;}}]},
+  {t:'🎁 Премия от шефа',p:'Заметили вашу работу. (Невероятно.)',c:[
+    {t:'Принять',s:`+2000 ${PROFILE.currency}`,f(){S.money+=2000;}}]},
+  {t:'🌯 Шаурма на пробу',p:'Анастасия просит попробовать вашу очередную шаурму. Вид у неё скептический.',c:[
+    {t:'Честно: «Опять не получилась»',s:'+3 навыка, +5 отношений',f(){S.skill+=3;S.love=clamp(S.love+5);}},
+    {t:'«Это так задумано, это деконструкция»',s:'−5 отношений, +8 прокрастинации',f(){S.love=clamp(S.love-5);S.procr=clamp(S.procr+8);}}]},
+  {t:'💥 Крипер у дома',p:'Вечером в Майнкрафте крипер подкрался к вашему дому.',c:[
+    {t:'Починить с Анастасией',s:'+10 отношений, −10 энергии',f(){S.love=clamp(S.love+10);S.energy=clamp(S.energy-10);}},
+    {t:'Свалить на Анастасию',s:'−8 отношений',f(){S.love=clamp(S.love-8);}}]},
+  {t:'🍽️ Заказ на банкет',p:'Знакомые просят приготовить на день рождения.',c:[
+    {t:'Взять заказ',s:`+4000 ${PROFILE.currency}, −25 энергии`,f(){S.money+=4000;S.energy=clamp(S.energy-25);}},
+    {t:'Отказаться: «выходной»',s:'Ничего не меняется',f(){}}]},
 ];
 function showEvent(){
   const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];
@@ -291,7 +336,7 @@ function openModal(title,text,choices){
 }
 
 /* ====== Интерфейс ====== */
-const BARS=[['energy','⚡ Энергия','--energy'],['health','❤️ Здоровье','--health'],['love','💕 Отношения','--love'],['procr','📱 Прокрастинация','--procr']];
+const BARS=[['energy','⚡ Энергия','--energy'],['health','❤️ Здоровье','--health'],['love','💕 Анастасия','--love'],['procr','📱 Прокрастинация','--procr']];
 function build(){
   const bars=document.getElementById('bars');
   BARS.forEach(([id,n,c])=>{
@@ -315,7 +360,7 @@ function build(){
     ups.append(b);
   });
   document.getElementById('promo').onclick=()=>{
-    const nx=S.career+1; if(paused||S.over||nx>=PROFILE.wages.length||S.skill<PROFILE.skillNeeded[nx]) return;
+    const nx=S.career+1; if(paused||S.over||nx>=PROFILE.monthSalary.length||S.skill<PROFILE.skillNeeded[nx]) return;
     S.career=nx; say(`Повышение! Теперь вы — ${PROFILE.careerNames[nx]}.`); checkState(); render(); save();
   };
   document.getElementById('btnReset').onclick=()=>{
@@ -326,9 +371,11 @@ function render(){
   const m=document.getElementById('money');
   m.textContent=fmt(S.money); m.classList.toggle('neg',S.money<0);
   document.getElementById('income').textContent=`Пассивный доход: ${fmt(passive())}/день · Расходы: ${fmt(expenses())}/день`;
-  document.getElementById('career').textContent=`${PROFILE.careerNames[S.career]} · навык ${S.skill.toFixed(1)} · смена ${fmt(effWage())}`;
+  document.getElementById('career').textContent=`${PROFILE.careerNames[S.career]} · навык ${S.skill.toFixed(1)} · оклад ${fmt(PROFILE.monthSalary[S.career])}/мес`;
+  document.getElementById('salary').textContent=`К выплате: ${fmt(S.pending)}`+(S.payDelay>0?` · задержка ещё ${S.payDelay} дн. 🙄`:` · до зарплаты ${((31-S.day%30)%30)||30} дн.`);
   document.getElementById('dayBar').style.width=(S.dayT/PROFILE.dayLength*100)+'%';
-  document.getElementById('dayTxt').textContent=`День ${S.day}`;
+  const hh=(PROFILE.wakeHour+S.dayT/PROFILE.dayLength*24)%24, H=Math.floor(hh), M=Math.floor((hh-H)*60/10)*10;
+  document.getElementById('dayTxt').textContent=`${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][(S.day-1)%7]}, день ${S.day} · ${String(H).padStart(2,'0')}:${String(M).padStart(2,'0')} · ${isWork()?'🔪 рабочий день':'🎮 выходной'}`;
   BARS.forEach(([id])=>{
     document.getElementById('bv_'+id).textContent=Math.round(S[id]);
     document.getElementById('bi_'+id).style.width=S[id]+'%';
@@ -347,9 +394,9 @@ function render(){
     document.getElementById('u_'+u.id).disabled=S.money<upCost(u);
   });
   const nx=S.career+1, pr=document.getElementById('promo');
-  if(nx<PROFILE.wages.length){
+  if(nx<PROFILE.monthSalary.length){
     document.getElementById('promoN').textContent=`Повышение: ${PROFILE.careerNames[nx]}`;
-    document.getElementById('promoD').textContent=`Нужен навык ${PROFILE.skillNeeded[nx]} · смена ${fmt(PROFILE.wages[nx])}`;
+    document.getElementById('promoD').textContent=`Нужен навык ${PROFILE.skillNeeded[nx]} · оклад ${fmt(PROFILE.monthSalary[nx])}/мес`;
     document.getElementById('promoP').textContent=S.skill>=PROFILE.skillNeeded[nx]?'Доступно':'🔒';
     pr.disabled=S.skill<PROFILE.skillNeeded[nx];
   } else {
