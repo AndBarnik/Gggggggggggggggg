@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Life Tycoon — Жизнь повара</title>
+<style>
+:root{
+  --bg:#14161f;--card:#1e2130;--card2:#262a3d;--text:#eef0f8;--muted:#8d93ad;
+  --money:#ffd166;--energy:#4cc9f0;--health:#ef476f;--love:#ff8fab;--procr:#9d7bff;
+  --ok:#06d6a0;--bad:#ef476f;--accent:#ff9f1c;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:12px 16px 40px;max-width:760px;margin-inline:auto;user-select:none}
+h1{font-size:18px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center}
+h2{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px}
+.card{background:var(--card);border-radius:14px;padding:12px}
+.top{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+#avatar{font-size:64px;line-height:1;width:84px;height:84px;display:grid;place-items:center;background:var(--card2);border-radius:20px;transition:transform .15s}
+#avatar.bump{transform:scale(1.12) rotate(-4deg)}
+#money{font-size:28px;font-weight:700;color:var(--money)}
+#money.neg{color:var(--bad)}
+.sub{color:var(--muted);font-size:12px}
+.day{margin-top:6px;height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
+.day>i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff9f1c);width:0}
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.bar{background:var(--card);border-radius:12px;padding:8px 10px}
+.bar b{font-size:12px;display:flex;justify-content:space-between}
+.bar .t{height:8px;background:var(--card2);border-radius:99px;margin-top:5px;overflow:hidden}
+.bar .t>i{display:block;height:100%;width:0;transition:width .25s}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.act{position:relative;overflow:hidden;background:var(--card);border-radius:14px;padding:10px;text-align:left;min-height:68px;transition:transform .08s}
+.act:active:not(:disabled){transform:scale(.97)}
+.act:disabled{opacity:.45;cursor:not-allowed}
+.act .n{font-weight:600}
+.act .d{font-size:11px;color:var(--muted);margin-top:2px}
+.act .cd{position:absolute;left:0;bottom:0;height:4px;background:var(--accent);width:0}
+.act.main{grid-column:1/-1;background:linear-gradient(135deg,#ff9f1c,#e85d04);min-height:84px;font-size:18px}
+.act.main .d{color:#ffe8cc}
+.list{display:grid;gap:8px}
+.up{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--card);border-radius:14px;padding:10px;width:100%;text-align:left}
+.up:disabled{opacity:.5}
+.up .ic{font-size:28px}
+.up .n{font-weight:600}
+.up .d{font-size:11px;color:var(--muted)}
+.up .p{font-weight:700;color:var(--money);white-space:nowrap}
+.freedom .t{height:12px;background:var(--card2);border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.freedom .t>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),#8ac926)}
+.city{font-size:24px;min-height:34px;letter-spacing:2px;word-break:break-all}
+.log{font-size:12px;color:var(--muted);display:grid;gap:3px;max-height:150px;overflow:auto}
+.log div:first-child{color:var(--text)}
+.float{position:fixed;pointer-events:none;font-weight:700;font-size:18px;color:var(--money);animation:fl 1s ease-out forwards;z-index:50;text-shadow:0 1px 3px #000}
+@keyframes fl{to{transform:translateY(-70px);opacity:0}}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal.on{display:flex}
+.modal .box{background:var(--card);border-radius:18px;padding:18px;max-width:420px;width:100%}
+.modal h3{margin:0 0 6px;font-size:18px}
+.modal p{margin:0 0 14px;color:var(--muted)}
+.choice{display:block;width:100%;background:var(--card2);border-radius:12px;padding:12px;margin-top:8px;text-align:left}
+.choice small{display:block;color:var(--muted);margin-top:2px}
+.row{display:flex;gap:8px}
+.small{background:var(--card2);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<h1><span>👨‍🍳 Life Tycoon</span><span class="row"><button class="small" id="btnReset">Сброс</button></span></h1>
+
+<div class="card top">
+  <div id="avatar">🧑‍🍳</div>
+  <div>
+    <div id="money">0 ₽</div>
+    <div class="sub" id="income"></div>
+    <div class="sub" id="career"></div>
+    <div class="day"><i id="dayBar"></i></div>
+    <div class="sub" id="dayTxt"></div>
+  </div>
+</div>
+
+<div class="bars" id="bars"></div>
+
+<h2>Действия</h2>
+<div class="actions" id="actions"></div>
+
+<h2>Карьера</h2>
+<button class="up" id="promo"><span class="ic">📈</span><span><span class="n" id="promoN"></span><br><span class="d" id="promoD"></span></span><span class="p" id="promoP"></span></button>
+
+<h2>Путь к финансовой свободе</h2>
+<div class="card freedom">
+  <div>Пассивный доход покрывает расходы</div>
+  <div class="t"><i id="freeBar"></i></div>
+  <div class="sub" id="freeTxt"></div>
+</div>
+
+<h2>Инвестиции и бизнес</h2>
+<div class="list" id="ups"></div>
+
+<h2>Моя империя</h2>
+<div class="card city" id="city">🏠</div>
+
+<h2>Журнал</h2>
+<div class="card log" id="log"></div>
+
+<div class="modal" id="modal"><div class="box"><h3 id="mT"></h3><p id="mP"></p><div id="mC"></div></div></div>
+
+<script>
+'use strict';
+/* ====== Профиль игрока: правьте тут, чтобы подогнать игру под реальную жизнь ====== */
+const PROFILE = {
+  job: 'Повар',
+  currency: '₽',
+  dayLength: 30,          // секунд реального времени на один игровой день
+  baseExpenses: 400,      // аренда, еда, транспорт в день
+  expensesPerCareerLvl: 120,
+  expensesPerAsset: 15,
+  wages: [100, 160, 260, 420, 700],
+  careerNames: ['Повар', 'Повар-универсал', 'Су-шеф', 'Шеф-повар', 'Бренд-шеф'],
+  skillNeeded: [0, 10, 25, 45, 70],
+  partnerName: 'Партнёр',
+};
+const UPGRADES = [
+  {id:'deposit', ic:'🏦', n:'Накопительный счёт', d:'Копейка рубль бережёт', base:500, inc:15},
+  {id:'blog',    ic:'📹', n:'Кулинарный канал',   d:'Рецепты и закулисье кухни', base:2000, inc:60},
+  {id:'stocks',  ic:'📈', n:'Акции и ИИС',        d:'Пусть деньги работают', base:5000, inc:160},
+  {id:'catering',ic:'🍱', n:'Домашний кейтеринг', d:'Заказы на выходные', base:12000, inc:400},
+  {id:'flat',    ic:'🏠', n:'Квартира в аренду',  d:'Стабильный арендный поток', base:40000, inc:1200},
+  {id:'truck',   ic:'🚚', n:'Фудтрак',            d:'Своя точка на колёсах', base:100000, inc:3000},
+  {id:'rest',    ic:'🍽️', n:'Свой ресторан',      d:'Мечта любого повара', base:400000, inc:10000},
+];
+const COST_GROWTH = 1.18;
+
+/* ====== Состояние ====== */
+const SAVE_KEY = 'lifeTycoon_cook_v1';
+function newState(){
+  return {money:300, energy:100, health:80, love:70, procr:20, skill:0, career:0,
+    day:1, dayT:0, owned:{}, log:[], lastAct:Date.now(), cd:{}, won:false, over:false, passiveAcc:0};
+}
+let S = load() || newState();
+let paused = false;
+
+function load(){ try{ const j=localStorage.getItem(SAVE_KEY); return j?JSON.parse(j):null; }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ====== Формулы ====== */
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const fmt=n=>Math.floor(n).toLocaleString('ru-RU')+' '+PROFILE.currency;
+const owned=id=>S.owned[id]||0;
+const upCost=u=>Math.round(u.base*Math.pow(COST_GROWTH,owned(u.id)));
+const passive=()=>UPGRADES.reduce((a,u)=>a+u.inc*owned(u.id),0);
+const assets=()=>UPGRADES.reduce((a,u)=>a+owned(u.id),0);
+const expenses=()=>Math.round(PROFILE.baseExpenses+PROFILE.expensesPerCareerLvl*S.career+PROFILE.expensesPerAsset*assets());
+const wage=()=>PROFILE.wages[S.career]*(1+S.skill*0.01);
+function say(t){ S.log.unshift(`День ${S.day}: ${t}`); S.log.length=Math.min(S.log.length,30); }
+
+/* ====== Действия ====== */
+const ACTIONS = [
+  {id:'work', main:true, ic:'🔪', n:()=>`Смена на кухне`, d:()=>`+${fmt(effWage())} · −8 энергии`, cd:700,
+   can:()=>S.energy>=8,
+   run(){ const w=effWage(); S.money+=w; S.energy-=8; S.procr=clamp(S.procr-2); S.skill+=0.2; return {float:'+'+fmt(w)}; }},
+  {id:'sleep', ic:'😴', n:()=>'Выспаться', d:()=>'+50 энергии · пропуск времени', cd:6000,
+   can:()=>true,
+   run(){ S.energy=clamp(S.energy+50); S.health=clamp(S.health+2); advance(7); say('Выспались. Мир стал чуть добрее.'); return {float:'💤'}; }},
+  {id:'gym', ic:'🏋️', n:()=>'Тренировка', d:()=>'+6 здоровья · −15 энергии', cd:3000,
+   can:()=>S.energy>=15,
+   run(){
+     if(S.procr>50 && Math.random()<0.4){ S.procr=clamp(S.procr-8); say('Собирались в зал, но «начну с понедельника».'); return {float:'😅 завтра'}; }
+     S.energy-=15; S.health=clamp(S.health+6); S.procr=clamp(S.procr-5); return {float:'+6 ❤️'}; }},
+  {id:'partner', ic:'🥰', n:()=>`Время с партнёром`, d:()=>`+12 отношений · −100 ${PROFILE.currency}`, cd:3000,
+   can:()=>S.energy>=10 && S.money>=100,
+   run(){ S.money-=100; S.energy-=10; S.love=clamp(S.love+12); S.procr=clamp(S.procr-3); return {float:'+12 💕'}; }},
+  {id:'learn', ic:'📚', n:()=>'Курс / новые рецепты', d:()=>`+1.5 навыка · −80 ${PROFILE.currency}`, cd:3000,
+   can:()=>S.energy>=12 && S.money>=80,
+   run(){ S.money-=80; S.energy-=12; S.skill+=1.5; return {float:'+1.5 🎓'}; }},
+  {id:'fast', ic:'🍔', n:()=>'Фастфуд после смены', d:()=>`+20 энергии · −4 здоровья · −40 ${PROFILE.currency}`, cd:2000,
+   can:()=>S.money>=40,
+   run(){ S.money-=40; S.energy=clamp(S.energy+20); S.health=clamp(S.health-4); say('Повар, а ужин — из ближайшей забегаловки. Классика.'); return {float:'🍔'}; }},
+  {id:'phone', ic:'📱', n:()=>'Полистать ленту', d:()=>'«Ещё пять минуточек» · +15 прокрастинации', cd:1500,
+   can:()=>true,
+   run(){ S.procr=clamp(S.procr+15); S.energy=clamp(S.energy-2); return {float:'📱 ...'}; }},
+  {id:'plan', ic:'📝', n:()=>'Составить план дня', d:()=>'−25 прокрастинации · −5 энергии', cd:8000,
+   can:()=>S.energy>=5,
+   run(){ S.procr=clamp(S.procr-25); S.energy-=5; return {float:'✔️ план'}; }},
+];
+function effWage(){ let w=wage(); if(S.procr>60) w*=0.6; if(S.health<30) w*=0.7; return w; }
+
+function doAction(a, ev){
+  const now=Date.now();
+  if(paused||S.over) return;
+  if((S.cd[a.id]||0)>now || !a.can()) return;
+  const r=a.run()||{};
+  S.cd[a.id]=now+a.cd; S.lastAct=now;
+  const av=document.getElementById('avatar'); av.classList.add('bump'); setTimeout(()=>av.classList.remove('bump'),120);
+  if(r.float){
+    const x=ev&&ev.clientX||innerWidth/2, y=ev&&ev.clientY||innerHeight/2;
+    const el=document.createElement('div'); el.className='float'; el.textContent=r.float; el.style.left=(x-20)+'px'; el.style.top=(y-20)+'px';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),1000);
+  }
+  checkState(); render();
+}
+
+/* ====== Время ====== */
+function advance(sec){
+  let t=sec;
+  while(t>0){
+    const step=Math.min(t, PROFILE.dayLength-S.dayT);
+    S.dayT+=step; t-=step;
+    S.money+=passive()*step/PROFILE.dayLength;
+    if(S.dayT>=PROFILE.dayLength-1e-6){ S.dayT=0; endDay(); }
+  }
+}
+function tick(){
+  if(paused||S.over) return;
+  const idle=(Date.now()-S.lastAct)/1000;
+  S.procr=clamp(S.procr+(idle>10?1.5:0.2));
+  S.energy=clamp(S.energy+0.3);
+  if(S.procr>=100){ S.procr=70; S.energy=clamp(S.energy-15); say('Залипли в телефоне на пару часов. Где время?'); }
+  advance(1);
+  checkState(); render();
+}
+function endDay(){
+  const e=expenses();
+  S.money-=e; S.day++;
+  S.love=clamp(S.love-3); S.health=clamp(S.health-1);
+  if(S.money<0){ S.procr=clamp(S.procr+5); S.health=clamp(S.health-2); say(`Долги давят. Расходы за день: ${fmt(e)}.`); }
+  else say(`Расходы за день: ${fmt(e)}.`);
+  checkState();
+  if(!S.over && Math.random()<0.4) showEvent();
+  save();
+}
+function checkState(){
+  if(S.health<=0){
+    S.health=40; S.energy=50; S.money-=300; S.dayT=0; S.day+=2;
+    say('Выгорание. Пара дней в больнице, −300. Берегите себя.');
+  }
+  if(S.love<=0 && !S.over){
+    S.over=true;
+    openModal('💔 Расставание','Вы так много работали и так мало замечали партнёра, что отношения закончились. Финансовая свобода без близких — не то, чего хотелось.',
+      [{t:'Начать заново',f:()=>{S=newState();save();render();}}]);
+  }
+  const free=passive()>=expenses();
+  if(free && S.health>=30 && S.love>=30 && !S.won){
+    S.won=true;
+    openModal('🎉 Финансовая свобода!',`День ${S.day}. Пассивный доход ${fmt(passive())}/день покрывает расходы ${fmt(expenses())}/день, а здоровье и отношения на месте. Вы сделали это!`,
+      [{t:'Продолжить играть',f:()=>{}},{t:'Начать заново',f:()=>{S=newState();save();render();}}]);
+  }
+}
+
+/* ====== События ====== */
+const EVENTS = [
+  {t:'🎬 Партнёр зовёт в кино',p:'«Давай сегодня куда-нибудь выберемся?»',c:[
+    {t:'Пойти',s:`−150 ${PROFILE.currency}, −10 энергии, +15 отношений`,f(){S.money-=150;S.energy=clamp(S.energy-10);S.love=clamp(S.love+15);}},
+    {t:'«Устал(а), останусь с телефоном»',s:'−10 отношений, +15 прокрастинации',f(){S.love=clamp(S.love-10);S.procr=clamp(S.procr+15);}}]},
+  {t:'🍕 Скидка на доставку',p:'Приложение шепчет: «Только сегодня −50%».',c:[
+    {t:'Заказать пиццу',s:`−100 ${PROFILE.currency}, +25 энергии, −8 здоровья`,f(){S.money-=100;S.energy=clamp(S.energy+25);S.health=clamp(S.health-8);}},
+    {t:'Приготовить дома',s:'−10 энергии, +4 здоровья (вы же повар!)',f(){S.energy=clamp(S.energy-10);S.health=clamp(S.health+4);}}]},
+  {t:'⏱️ Сверхурочные',p:'Шеф просит выйти на подмену.',c:[
+    {t:'Согласиться',s:`+600 ${PROFILE.currency}, −30 энергии`,f(){S.money+=600;S.energy=clamp(S.energy-30);}},
+    {t:'Отказаться',s:'Ничего не меняется',f(){}}]},
+  {t:'🏃 Друг зовёт на пробежку',p:'«Утром, в семь. Без отговорок!»',c:[
+    {t:'Побежать',s:'+10 здоровья, −15 энергии',f(){S.health=clamp(S.health+10);S.energy=clamp(S.energy-15);}},
+    {t:'«С завтрашнего дня»',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
+  {t:'🤧 Простуда',p:'Кухня — сквозняки и пар. Вы заболели.',c:[
+    {t:'Купить лекарства',s:`−200 ${PROFILE.currency}, −15 здоровья`,f(){S.money-=200;S.health=clamp(S.health-15);}}]},
+  {t:'💐 Годовщина',p:'Вы вспомнили про дату… или нет?',c:[
+    {t:'Подарок и ужин',s:`−500 ${PROFILE.currency}, +25 отношений`,f(){S.money-=500;S.love=clamp(S.love+25);}},
+    {t:'Забыть',s:'−25 отношений',f(){S.love=clamp(S.love-25);}}]},
+  {t:'💡 Идея нового блюда',p:'Придумали сочетание, которого нет ни в одной книге.',c:[
+    {t:'Записать в блог',s:'+3 навыка, −5 энергии',f(){S.skill+=3;S.energy=clamp(S.energy-5);}},
+    {t:'Забыть к вечеру',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
+  {t:'🎁 Премия от шефа',p:'Заметили вашу работу.',c:[
+    {t:'Принять',s:`+500 ${PROFILE.currency}`,f(){S.money+=500;}}]},
+];
+function showEvent(){
+  const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  openModal(e.t,e.p,e.c.map(c=>({t:c.t,s:c.s,f:()=>{c.f();say(e.t.replace(/^\S+\s/,'')+': '+c.t+'.');checkState();}})));
+}
+function openModal(title,text,choices){
+  paused=true;
+  document.getElementById('mT').textContent=title;
+  document.getElementById('mP').textContent=text;
+  const box=document.getElementById('mC'); box.innerHTML='';
+  choices.forEach(c=>{
+    const b=document.createElement('button'); b.className='choice';
+    b.innerHTML=''; b.append(c.t);
+    if(c.s){ const s=document.createElement('small'); s.textContent=c.s; b.append(s); }
+    b.onclick=()=>{ document.getElementById('modal').classList.remove('on'); paused=false; c.f(); S.lastAct=Date.now(); render(); save(); };
+    box.append(b);
+  });
+  document.getElementById('modal').classList.add('on');
+}
+
+/* ====== Интерфейс ====== */
+const BARS=[['energy','⚡ Энергия','--energy'],['health','❤️ Здоровье','--health'],['love','💕 Отношения','--love'],['procr','📱 Прокрастинация','--procr']];
+function build(){
+  const bars=document.getElementById('bars');
+  BARS.forEach(([id,n,c])=>{
+    bars.insertAdjacentHTML('beforeend',`<div class="bar"><b><span>${n}</span><span id="bv_${id}"></span></b><div class="t"><i id="bi_${id}" style="background:var(${c})"></i></div></div>`);
+  });
+  const acts=document.getElementById('actions');
+  ACTIONS.forEach(a=>{
+    const b=document.createElement('button'); b.className='act'+(a.main?' main':''); b.id='a_'+a.id;
+    b.innerHTML=`<div class="n">${a.ic} <span id="an_${a.id}"></span></div><div class="d" id="ad_${a.id}"></div><div class="cd" id="ac_${a.id}"></div>`;
+    b.addEventListener('click',ev=>doAction(a,ev));
+    acts.append(b);
+  });
+  const ups=document.getElementById('ups');
+  UPGRADES.forEach(u=>{
+    const b=document.createElement('button'); b.className='up'; b.id='u_'+u.id;
+    b.innerHTML=`<span class="ic">${u.ic}</span><span><span class="n" id="un_${u.id}"></span><br><span class="d">${u.d} · +${fmt(u.inc)}/день</span></span><span class="p" id="up_${u.id}"></span>`;
+    b.onclick=()=>{
+      const c=upCost(u); if(paused||S.over||S.money<c) return;
+      S.money-=c; S.owned[u.id]=owned(u.id)+1; say(`Куплено: ${u.n}.`); checkState(); render(); save();
+    };
+    ups.append(b);
+  });
+  document.getElementById('promo').onclick=()=>{
+    const nx=S.career+1; if(paused||S.over||nx>=PROFILE.wages.length||S.skill<PROFILE.skillNeeded[nx]) return;
+    S.career=nx; say(`Повышение! Теперь вы — ${PROFILE.careerNames[nx]}.`); checkState(); render(); save();
+  };
+  document.getElementById('btnReset').onclick=()=>{
+    if(confirm('Сбросить прогресс и начать заново?')){ S=newState(); save(); render(); }
+  };
+}
+function render(){
+  const m=document.getElementById('money');
+  m.textContent=fmt(S.money); m.classList.toggle('neg',S.money<0);
+  document.getElementById('income').textContent=`Пассивный доход: ${fmt(passive())}/день · Расходы: ${fmt(expenses())}/день`;
+  document.getElementById('career').textContent=`${PROFILE.careerNames[S.career]} · навык ${S.skill.toFixed(1)} · смена ${fmt(effWage())}`;
+  document.getElementById('dayBar').style.width=(S.dayT/PROFILE.dayLength*100)+'%';
+  document.getElementById('dayTxt').textContent=`День ${S.day}`;
+  BARS.forEach(([id])=>{
+    document.getElementById('bv_'+id).textContent=Math.round(S[id]);
+    document.getElementById('bi_'+id).style.width=S[id]+'%';
+  });
+  const now=Date.now();
+  ACTIONS.forEach(a=>{
+    document.getElementById('an_'+a.id).textContent=a.n();
+    document.getElementById('ad_'+a.id).textContent=a.d();
+    const left=(S.cd[a.id]||0)-now;
+    document.getElementById('a_'+a.id).disabled=left>0||!a.can()||S.over;
+    document.getElementById('ac_'+a.id).style.width=left>0?(left/a.cd*100)+'%':'0';
+  });
+  UPGRADES.forEach(u=>{
+    document.getElementById('un_'+u.id).textContent=`${u.n} ×${owned(u.id)}`;
+    document.getElementById('up_'+u.id).textContent=fmt(upCost(u));
+    document.getElementById('u_'+u.id).disabled=S.money<upCost(u);
+  });
+  const nx=S.career+1, pr=document.getElementById('promo');
+  if(nx<PROFILE.wages.length){
+    document.getElementById('promoN').textContent=`Повышение: ${PROFILE.careerNames[nx]}`;
+    document.getElementById('promoD').textContent=`Нужен навык ${PROFILE.skillNeeded[nx]} · смена ${fmt(PROFILE.wages[nx])}`;
+    document.getElementById('promoP').textContent=S.skill>=PROFILE.skillNeeded[nx]?'Доступно':'🔒';
+    pr.disabled=S.skill<PROFILE.skillNeeded[nx];
+  } else {
+    document.getElementById('promoN').textContent='Вершина карьеры'; document.getElementById('promoD').textContent='Выше только свой ресторан';
+    document.getElementById('promoP').textContent='🏆'; pr.disabled=true;
+  }
+  const ratio=Math.min(1,passive()/expenses());
+  document.getElementById('freeBar').style.width=(ratio*100)+'%';
+  document.getElementById('freeTxt').textContent=`${Math.round(ratio*100)}% · ${fmt(passive())} из ${fmt(expenses())} в день`+(S.won?' · ЦЕЛЬ ДОСТИГНУТА 🎉':'');
+  document.getElementById('city').textContent=UPGRADES.map(u=>u.ic.repeat(Math.min(owned(u.id),6))).join('')||'🏠';
+  document.getElementById('log').innerHTML=S.log.map(l=>`<div>${l.replace(/</g,'&lt;')}</div>`).join('')||'<div>Пока тихо. Начните смену!</div>';
+  const av=document.getElementById('avatar');
+  av.textContent=S.over?'💔':S.energy<15?'😵‍💫':S.health<30?'🤒':S.procr>70?'🥱':S.love>75&&S.health>60?'😊':'🧑‍🍳';
+}
+
+build(); render();
+setInterval(tick,1000);
+setInterval(render,150);
+setInterval(save,10000);
+</script>
+</body>
+</html>
