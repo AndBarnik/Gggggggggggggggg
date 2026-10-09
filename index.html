@@ -4,103 +4,111 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Life Tycoon — Жизнь повара</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#14161f;--card:#1e2130;--card2:#262a3d;--text:#eef0f8;--muted:#8d93ad;
-  --money:#ffd166;--energy:#4cc9f0;--health:#ef476f;--love:#ff8fab;--procr:#9d7bff;
+  --bg:#1b1b24;--card:#2c2c3a;--card2:#3a3a4e;--text:#f2f2f7;--muted:#a8a8c0;--line:#0d0d14;
+  --money:#ffd166;--energy:#4cc9f0;--health:#ef476f;--love:#ff8fab;--procr:#9d7bff;--caf:#c8a02c;--vape:#9aa5b1;--lang:#06d6a0;
   --ok:#06d6a0;--bad:#ef476f;--accent:#ff9f1c;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Pixelify Sans',ui-monospace,monospace;font-size:15px;
   padding:12px 16px 40px;max-width:760px;margin-inline:auto;user-select:none}
-h1{font-size:18px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center}
-h2{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px}
-.card{background:var(--card);border-radius:14px;padding:12px}
-.top{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
-#avatar{font-size:64px;line-height:1;width:84px;height:84px;display:grid;place-items:center;background:var(--card2);border-radius:20px;transition:transform .15s}
-#avatar.bump{transform:scale(1.12) rotate(-4deg)}
-#money{font-size:28px;font-weight:700;color:var(--money)}
+.px{font-family:'Press Start 2P',ui-monospace,monospace}
+h1{font-size:13px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center;font-family:'Press Start 2P',monospace}
+h2{font-size:10px;font-family:'Press Start 2P',monospace;color:var(--muted);margin:20px 0 8px;line-height:1.5}
+.card{background:var(--card);padding:12px;border:3px solid var(--line);box-shadow:inset -3px -3px #0005,inset 3px 3px #fff1}
+#scene{display:block;width:100%;image-rendering:pixelated;border:4px solid var(--line);background:#6ec6ff}
+.head{margin-top:10px}
+#money{font-size:18px;font-weight:700;color:var(--money);font-family:'Press Start 2P',monospace}
 #money.neg{color:var(--bad)}
-.sub{color:var(--muted);font-size:12px}
-.day{margin-top:6px;height:8px;background:var(--card2);border-radius:99px;overflow:hidden}
+.sub{color:var(--muted);font-size:13px;margin-top:3px}
+.day{margin-top:8px;height:10px;background:var(--card2);border:2px solid var(--line)}
 .day>i{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff9f1c);width:0}
 .bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.bar{background:var(--card);border-radius:12px;padding:8px 10px}
-.bar b{font-size:12px;display:flex;justify-content:space-between}
-.bar .t{height:8px;background:var(--card2);border-radius:99px;margin-top:5px;overflow:hidden}
+.bar{background:var(--card);padding:7px 9px;border:3px solid var(--line)}
+.bar b{font-size:13px;display:flex;justify-content:space-between;font-weight:600}
+.bar .t{height:9px;background:var(--card2);border:2px solid var(--line);margin-top:5px}
 .bar .t>i{display:block;height:100%;width:0;transition:width .25s}
 .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-button{font:inherit;color:inherit;border:0;cursor:pointer}
-.act{position:relative;overflow:hidden;background:var(--card);border-radius:14px;padding:10px;text-align:left;min-height:68px;transition:transform .08s}
-.act:active:not(:disabled){transform:scale(.97)}
+button{font:inherit;color:inherit;cursor:pointer;border-radius:0}
+.act,.up,.small,.choice{border:3px solid var(--line);box-shadow:inset -4px -4px #0006,inset 4px 4px #fff2}
+.act{position:relative;overflow:hidden;background:#4a4a5c;padding:9px 10px;text-align:left;min-height:68px}
+.act:active:not(:disabled){transform:translateY(2px)}
 .act:disabled{opacity:.45;cursor:not-allowed}
 .act .n{font-weight:600}
-.act .d{font-size:11px;color:var(--muted);margin-top:2px}
-.act .cd{position:absolute;left:0;bottom:0;height:4px;background:var(--accent);width:0}
-.act.main{grid-column:1/-1;background:linear-gradient(135deg,#ff9f1c,#e85d04);min-height:84px;font-size:18px}
+.act .d{font-size:12px;color:#c4c4d8;margin-top:2px}
+.act .cd{position:absolute;left:0;bottom:0;height:5px;background:var(--accent);width:0}
+.act.main{grid-column:1/-1;background:#d9780f;min-height:84px;font-size:17px}
 .act.main .d{color:#ffe8cc}
+.act.bad{background:#5a3a4a}
 .list{display:grid;gap:8px}
-.up{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--card);border-radius:14px;padding:10px;width:100%;text-align:left}
+.up{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:#4a4a5c;padding:9px;width:100%;text-align:left}
 .up:disabled{opacity:.5}
-.up .ic{font-size:28px}
+.up .ic{font-size:26px}
 .up .n{font-weight:600}
-.up .d{font-size:11px;color:var(--muted)}
-.up .p{font-weight:700;color:var(--money);white-space:nowrap}
-.freedom .t{height:12px;background:var(--card2);border-radius:99px;overflow:hidden;margin:8px 0 4px}
-.freedom .t>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),#8ac926)}
-.city{font-size:24px;min-height:34px;letter-spacing:2px;word-break:break-all}
-.log{font-size:12px;color:var(--muted);display:grid;gap:3px;max-height:150px;overflow:auto}
+.up .d{font-size:12px;color:#c4c4d8}
+.up .p{font-weight:700;color:var(--money);white-space:nowrap;font-size:13px}
+.goal .t{height:14px;background:var(--card2);border:2px solid var(--line);margin:8px 0 4px}
+.goal .t>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),#8ac926)}
+.goal.move .t>i{background:linear-gradient(90deg,#4cc9f0,#06d6a0)}
+.log{font-size:13px;color:var(--muted);display:grid;gap:4px;max-height:170px;overflow:auto}
 .log div:first-child{color:var(--text)}
-.float{position:fixed;pointer-events:none;font-weight:700;font-size:18px;color:var(--money);animation:fl 1s ease-out forwards;z-index:50;text-shadow:0 1px 3px #000}
+.float{position:fixed;pointer-events:none;font-family:'Press Start 2P',monospace;font-size:12px;color:var(--money);animation:fl 1s ease-out forwards;z-index:50;text-shadow:2px 2px 0 #000}
 @keyframes fl{to{transform:translateY(-70px);opacity:0}}
-.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
 .modal.on{display:flex}
-.modal .box{background:var(--card);border-radius:18px;padding:18px;max-width:420px;width:100%}
-.modal h3{margin:0 0 6px;font-size:18px}
+.modal .box{background:var(--card);padding:18px;max-width:420px;width:100%;border:4px solid var(--line);animation:pop .2s}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.modal h3{margin:0 0 10px;font-size:13px;font-family:'Press Start 2P',monospace;line-height:1.5}
 .modal p{margin:0 0 14px;color:var(--muted)}
-.choice{display:block;width:100%;background:var(--card2);border-radius:12px;padding:12px;margin-top:8px;text-align:left}
-.choice small{display:block;color:var(--muted);margin-top:2px}
-.row{display:flex;gap:8px}
-.small{background:var(--card2);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.choice{display:block;width:100%;background:#4a4a5c;padding:11px;margin-top:8px;text-align:left}
+.choice small{display:block;color:#c4c4d8;margin-top:3px;font-size:12px}
+.row{display:flex;gap:6px}
+.small{background:#4a4a5c;padding:6px 8px;font-size:11px;font-family:'Press Start 2P',monospace}
 </style>
 </head>
 <body>
-<h1><span>👨‍🍳 Life Tycoon</span><span class="row"><button class="small" id="btnReset">Сброс</button></span></h1>
+<h1><span>⛏️ LIFE TYCOON</span><span class="row"><button class="small" id="btnSpeed">x1</button><button class="small" id="btnSound">🔊</button><button class="small" id="btnReset">Сброс</button></span></h1>
 
-<div class="card top">
-  <div id="avatar">🧑‍🍳</div>
-  <div>
-    <div id="money">0 ₽</div>
-    <div class="sub" id="income"></div>
-    <div class="sub" id="career"></div>
-    <div class="sub" id="salary" style="color:var(--money)"></div>
-    <div class="day"><i id="dayBar"></i></div>
-    <div class="sub" id="dayTxt"></div>
-  </div>
+<canvas id="scene" width="320" height="150"></canvas>
+
+<div class="card head">
+  <div id="money">0 ₽</div>
+  <div class="sub" id="salary" style="color:var(--money)"></div>
+  <div class="sub" id="income"></div>
+  <div class="sub" id="career"></div>
+  <div class="day"><i id="dayBar"></i></div>
+  <div class="sub" id="dayTxt"></div>
 </div>
 
 <div class="bars" id="bars"></div>
 
-<h2>Действия</h2>
+<h2>ДЕЙСТВИЯ</h2>
 <div class="actions" id="actions"></div>
 
-<h2>Карьера</h2>
+<h2>КАРЬЕРА В ZAKAZOOM</h2>
 <button class="up" id="promo"><span class="ic">📈</span><span><span class="n" id="promoN"></span><br><span class="d" id="promoD"></span></span><span class="p" id="promoP"></span></button>
 
-<h2>Путь к финансовой свободе</h2>
-<div class="card freedom">
+<h2>ЦЕЛЬ 1: ПЕРЕЕЗД В ДРУГУЮ СТРАНУ ✈️</h2>
+<div class="card goal move">
+  <div>Деньги на переезд, язык и Анастасия рядом</div>
+  <div class="t"><i id="moveBar"></i></div>
+  <div class="sub" id="moveTxt"></div>
+</div>
+
+<h2>ЦЕЛЬ 2: ФИНАНСОВАЯ СВОБОДА</h2>
+<div class="card goal">
   <div>Пассивный доход покрывает расходы</div>
   <div class="t"><i id="freeBar"></i></div>
   <div class="sub" id="freeTxt"></div>
 </div>
 
-<h2>Инвестиции и бизнес</h2>
+<h2>ИНВЕСТИЦИИ И БИЗНЕС</h2>
 <div class="list" id="ups"></div>
 
-<h2>Моя империя</h2>
-<div class="card city" id="city">🏠</div>
-
-<h2>Журнал</h2>
+<h2>ЖУРНАЛ</h2>
 <div class="card log" id="log"></div>
 
 <div class="modal" id="modal"><div class="box"><h3 id="mT"></h3><p id="mP"></p><div id="mC"></div></div></div>
@@ -109,7 +117,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 'use strict';
 /* ====== Профиль игрока: правьте тут, чтобы подогнать игру под реальную жизнь ====== */
 const PROFILE = {
-  job: 'Повар',
+  job: 'Повар в ZakaZoom',
   currency: '₽',
   dayLength: 20,          // секунд реального времени на один игровой день
   baseExpenses: 900,      // аренда 12 000 + остальное 15 000 в месяц = 900 в день
@@ -117,30 +125,34 @@ const PROFILE = {
   expensesPerAsset: 15,
   monthSalary: [57000, 70000, 90000, 120000, 180000], // оклад в месяц
   clicksPerMonth: 90,     // 15 смен (график 3/3) × 6 действий
+  shiftActions: 6,        // действий в смену, дальше — сверхурочные
   careerNames: ['Повар', 'Повар-универсал', 'Су-шеф', 'Шеф-повар', 'Бренд-шеф'],
   skillNeeded: [0, 10, 25, 45, 70],
   partnerName: 'Анастасия',
   wakeHour: 8.5,          // подъём в 8:30
+  moveMoney: 250000,      // сколько нужно на переезд
+  moveLang: 100,          // очков языка для переезда
 };
 const UPGRADES = [
-  {id:'deposit', ic:'🏦', n:'Накопительный счёт', d:'Копейка рубль бережёт', base:5000, inc:50},
-  {id:'blog',    ic:'📹', n:'Кулинарный канал',   d:'Рецепты (и провалы с шаурмой)', base:12000, inc:150},
-  {id:'stocks',  ic:'📈', n:'Акции и ИИС',        d:'Пусть деньги работают', base:30000, inc:350},
-  {id:'catering',ic:'🍱', n:'Домашний кейтеринг', d:'Заказы на выходные', base:60000, inc:700},
-  {id:'flat',    ic:'🏠', n:'Квартира в аренду',  d:'Стабильный арендный поток', base:200000, inc:1800},
-  {id:'truck',   ic:'🚚', n:'Фудтрак с шаурмой',  d:'Ту самую, которая получается', base:450000, inc:4000},
-  {id:'rest',    ic:'🍽️', n:'Свой ресторан',      d:'Мечта любого повара', base:1500000, inc:12000},
+  {id:'deposit', ic:'🏦', n:'Накопительный счёт', d:'Копейка рубль бережёт', base:5000, inc:50, col:'#8a6d3b'},
+  {id:'blog',    ic:'📹', n:'Кулинарный канал',   d:'Рецепты (и провалы с шаурмой)', base:12000, inc:150, col:'#a33'},
+  {id:'stocks',  ic:'📈', n:'Акции и ИИС',        d:'Пусть деньги работают', base:30000, inc:350, col:'#2a7'},
+  {id:'catering',ic:'🍱', n:'Домашний кейтеринг', d:'Борщ на заказ — ваш конёк', base:60000, inc:700, col:'#c70'},
+  {id:'flat',    ic:'🏠', n:'Квартира в аренду',  d:'Стабильный арендный поток', base:200000, inc:1800, col:'#57a'},
+  {id:'truck',   ic:'🚚', n:'Фудтрак с шаурмой',  d:'Ту самую, которая получается', base:450000, inc:4000, col:'#a50'},
+  {id:'rest',    ic:'🍽️', n:'Свой ресторан',      d:'Мечта любого повара', base:1500000, inc:12000, col:'#738'},
 ];
 const COST_GROWTH = 1.15;
 
 /* ====== Состояние ====== */
-const SAVE_KEY = 'lifeTycoon_cook_v2';
+const SAVE_KEY = 'lifeTycoon_cook_v3';
 function newState(){
-  return {money:15000, pending:0, payDelay:0, shawaOk:0, shawaFail:0, energy:100, health:80, love:70, procr:20, skill:0, career:0,
-    day:1, dayT:0, owned:{}, log:[], lastAct:Date.now(), cd:{}, won:false, over:false, passiveAcc:0};
+  return {money:15000, pending:0, payDelay:0, shift:0, shawaOk:0, shawaFail:0, energy:100, health:80, love:70, procr:20,
+    caf:0, vape:0, crash:0, lang:0, skill:0, career:0, day:1, dayT:0, owned:{}, log:[], lastAct:Date.now(), cd:{},
+    won:false, moved:false, over:false};
 }
-let S = load() || newState();
-let paused = false;
+let S = Object.assign(newState(), load() || {});
+let paused = false, speed = 1, shake = 0;
 
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); return j?JSON.parse(j):null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
@@ -155,57 +167,109 @@ const assets=()=>UPGRADES.reduce((a,u)=>a+owned(u.id),0);
 const expenses=()=>Math.round(PROFILE.baseExpenses+PROFILE.expensesPerCareerLvl*S.career+PROFILE.expensesPerAsset*assets());
 const wage=()=>PROFILE.monthSalary[S.career]/PROFILE.clicksPerMonth*(1+S.skill*0.01);
 const isWork=()=>((S.day-1)%6)<3;
+const hourNow=()=>(PROFILE.wakeHour+S.dayT/PROFILE.dayLength*24)%24;
 function say(t){ S.log.unshift(`День ${S.day}: ${t}`); S.log.length=Math.min(S.log.length,30); }
+function effWage(){ let w=wage(); if(S.procr>60) w*=0.6; if(S.health<30) w*=0.7; return w; }
+function shawaChance(){ return Math.min(0.85,0.12+S.skill*0.01); }
+
+/* ====== Звук ====== */
+let ac=null, muted=false;
+function beep(f,d=0.08,type='square',v=0.05,when=0){
+  if(muted) return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(); o.type=type; o.frequency.value=f; g.gain.value=v;
+    o.connect(g); g.connect(ac.destination);
+    const t=ac.currentTime+when; o.start(t); g.gain.exponentialRampToValueAtTime(0.0001,t+d); o.stop(t+d);
+  }catch(e){}
+}
+const SFX={
+  coin(){beep(988,.06);beep(1319,.12,'square',.05,.06);},
+  good(){beep(660,.08);beep(880,.1,'square',.05,.08);},
+  bad(){beep(160,.22,'sawtooth',.06);},
+  ev(){beep(440,.1);beep(554,.1,'square',.05,.1);beep(659,.15,'square',.05,.2);},
+  win(){[523,659,784,1047].forEach((f,i)=>beep(f,.22,'square',.06,i*.15));},
+  click(){beep(300,.04);}
+};
 
 /* ====== Действия ====== */
 const SHAWA_FAILS=['Шаурма развалилась в руках. Лаваш победил.','Соус вытек в тапочки. Шаурма — нет.','Получился очень дорогой рулет с грустью.','Анастасия пробует: «Ну… неплохо…» (нет).','Лаваш порвался. Опять.'];
+const HOME_OK=['Борщ удался. Анастасия просит добавки.','Домашние котлеты: идеально. Вот это ваш уровень!','Картошка с грибами по маминому рецепту. Шедевр.','Сырники вышли воздушными. Шаурме бы так.'];
 const ACTIONS = [
-  {id:'work', main:true, ic:'🔪', n:()=>isWork()?'Смена на кухне':'Сегодня выходной!', d:()=>isWork()?`+${fmt(effWage())} к зарплате · −8 энергии`:'График 3/3: сегодня Майнкрафт, а не плита', cd:700,
+  {id:'work', main:true, ic:'🔪', n:()=>isWork()?(S.shift<PROFILE.shiftActions?`Смена в ZakaZoom (${S.shift}/${PROFILE.shiftActions})`:'Сверхурочные в ZakaZoom'):'Сегодня выходной!',
+   d:()=>isWork()?(S.shift<PROFILE.shiftActions?`+${fmt(effWage())} к зарплате · −8 энергии`:`+${fmt(effWage()*1.5)} (×1.5) · −8 энергии · −2 здоровья`):'График 3/3: сегодня Майнкрафт, а не плита', cd:700,
    can:()=>isWork() && S.energy>=8,
-   run(){ const w=effWage(); S.pending+=w; S.energy-=8; S.procr=clamp(S.procr-2); S.skill+=0.2; return {float:'+'+fmt(w)}; }},
+   run(){ const over=S.shift>=PROFILE.shiftActions; let w=effWage(); if(over){ w*=1.5; S.health=clamp(S.health-2); }
+     S.shift++; S.pending+=w; S.energy-=8; S.procr=clamp(S.procr-2); S.skill+=0.2;
+     return {float:'+'+fmt(w), fx:'🪙', sfx:'coin'}; }},
   {id:'coffee', ic:'☕', n:()=>'Капучино с Анастасией', d:()=>`Утренний ритуал · −300 ${PROFILE.currency}`, cd:5000,
    can:()=>S.money>=300,
    run(){ S.money-=300;
      const morning=S.dayT<PROFILE.dayLength*0.25;
      S.love=clamp(S.love+(morning?9:3)); S.energy=clamp(S.energy+(morning?12:4));
      if(!morning) say('Капучино после обеда — это уже не ритуал, а кофеиновая зависимость.');
-     return {float:morning?'☕ +9 💕':'☕ +3 💕'}; }},
+     return {float:morning?'☕ +9 💕':'☕ +3 💕', fx:'💕', sfx:'good'}; }},
   {id:'mine', ic:'⛏️', n:()=>'Майнкрафт с Анастасией', d:()=>'Вечерний кооп · +15 отношений · −10 энергии', cd:4000,
    can:()=>S.energy>=10,
    run(){ S.energy-=10; S.love=clamp(S.love+15); S.procr=clamp(S.procr+3);
-     const r=Math.random();
-     if(r<0.25) say('Крипер взорвал дом, который строили два часа. Анастасия смеётся, вы — нет.');
+     const r=Math.random(); let fx='💎';
+     if(r<0.25){ say('Крипер взорвал дом, который строили два часа. Анастасия смеётся, вы — нет.'); shake=12; fx='💥'; SFX.bad(); }
      else if(r<0.45) say('Нашли алмазы! Тут же уронили их в лаву. Классика.');
      else if(r<0.6) say('Анастасия построила замок лучше вашего. Вы «просто делали фундамент».');
-     return {float:'⛏️ +15 💕'}; }},
-  {id:'shawa', ic:'🌯', n:()=>`Сделать шаурму (удач ${S.shawaOk} / провалов ${S.shawaFail})`, d:()=>`−200 ${PROFILE.currency} на продукты · шанс ${Math.round(shawaChance()*100)}%`, cd:3000,
+     return {float:'⛏️ +15 💕', fx, sfx:r<0.25?null:'good'}; }},
+  {id:'home', ic:'🍲', n:()=>'Домашний ужин', d:()=>`Ваш конёк! +5 здоровья · +5 отношений · −250 ${PROFILE.currency}`, cd:3000,
+   can:()=>S.energy>=8 && S.money>=250,
+   run(){ S.money-=250; S.energy-=8; S.health=clamp(S.health+5); S.love=clamp(S.love+5); S.skill+=0.3;
+     if(Math.random()<0.5) say(HOME_OK[Math.floor(Math.random()*HOME_OK.length)]);
+     return {float:'🍲 +5 ❤️', fx:'❤️', sfx:'good'}; }},
+  {id:'shawa', ic:'🌯', n:()=>`Сделать шаурму (${S.shawaOk} / ${S.shawaFail} провалов)`, d:()=>`−200 ${PROFILE.currency} · шанс ${Math.round(shawaChance()*100)}%`, cd:3000,
    can:()=>S.energy>=10 && S.money>=200,
    run(){ S.money-=200; S.energy-=10; S.skill+=0.5;
-     if(Math.random()<shawaChance()){ S.shawaOk++; S.money+=800; say('Шаурма УДАЛАСЬ! Соседи платят 800. Записали рецепт на салфетке.'); return {float:'🌯 +800'}; }
-     S.shawaFail++; say(SHAWA_FAILS[Math.floor(Math.random()*SHAWA_FAILS.length)]); return {float:'🌯 💥'}; }},
-  {id:'sleep', ic:'😴', n:()=>'Выспаться', d:()=>'+50 энергии · пропуск времени', cd:6000,
-   can:()=>true,
-   run(){ S.energy=clamp(S.energy+50); S.health=clamp(S.health+2); advance(5); say('Выспались. Будильник на 8:30 всё равно сильнее.'); return {float:'💤'}; }},
+     if(Math.random()<shawaChance()){ S.shawaOk++; S.money+=800; say('Шаурма УДАЛАСЬ! Соседи платят 800. Записали рецепт на салфетке.'); return {float:'🌯 +800', fx:'🌯', sfx:'coin'}; }
+     S.shawaFail++; say(SHAWA_FAILS[Math.floor(Math.random()*SHAWA_FAILS.length)]); shake=6; return {float:'🌯 💥', fx:'💥', sfx:'bad'}; }},
+  {id:'lang', ic:'✈️', n:()=>`Учить язык (${Math.floor(S.lang)}/${PROFILE.moveLang})`, d:()=>`+4 к языку · −300 ${PROFILE.currency} · −12 энергии`, cd:3000,
+   can:()=>S.energy>=12 && S.money>=300,
+   run(){
+     if(S.procr>60 && Math.random()<0.4){ S.procr=clamp(S.procr-6); say('Серия в приложении для языка спасена за 40 секунд до полуночи. Ничего не выучено.'); return {float:'🦉 ...', sfx:'bad'}; }
+     S.money-=300; S.energy-=12; S.lang+=4; S.procr=clamp(S.procr-3); return {float:'+4 ✈️', fx:'✈️', sfx:'good'}; }},
+  {id:'learn', ic:'📚', n:()=>'Курс / новые рецепты', d:()=>`+1.5 навыка · −500 ${PROFILE.currency}`, cd:3000,
+   can:()=>S.energy>=12 && S.money>=500,
+   run(){ S.money-=500; S.energy-=12; S.skill+=1.5; return {float:'+1.5 🎓', fx:'🎓', sfx:'good'}; }},
   {id:'gym', ic:'🏋️', n:()=>'Тренировка', d:()=>'+6 здоровья · −15 энергии', cd:3000,
    can:()=>S.energy>=15,
    run(){
-     if(S.procr>50 && Math.random()<0.4){ S.procr=clamp(S.procr-8); say('Собирались в зал, но «начну с понедельника».'); return {float:'😅 завтра'}; }
-     S.energy-=15; S.health=clamp(S.health+6); S.procr=clamp(S.procr-5); return {float:'+6 ❤️'}; }},
-  {id:'learn', ic:'📚', n:()=>'Курс / новые рецепты', d:()=>`+1.5 навыка · −500 ${PROFILE.currency}`, cd:3000,
-   can:()=>S.energy>=12 && S.money>=500,
-   run(){ S.money-=500; S.energy-=12; S.skill+=1.5; return {float:'+1.5 🎓'}; }},
-  {id:'fast', ic:'🍔', n:()=>'Фастфуд после смены', d:()=>`+20 энергии · −4 здоровья · −300 ${PROFILE.currency}`, cd:2000,
-   can:()=>S.money>=300,
-   run(){ S.money-=300; S.energy=clamp(S.energy+20); S.health=clamp(S.health-4); say('Повар, а ужин — из ближайшей забегаловки. Классика.'); return {float:'🍔'}; }},
-  {id:'phone', ic:'📱', n:()=>'Полистать ленту', d:()=>'«Ещё пять минуточек» · +15 прокрастинации', cd:1500,
+     if(S.procr>50 && Math.random()<0.4){ S.procr=clamp(S.procr-8); say('Собирались в зал, но «начну с понедельника».'); return {float:'😅 завтра', sfx:'bad'}; }
+     S.energy-=15; S.health=clamp(S.health+6); S.procr=clamp(S.procr-5); return {float:'+6 ❤️', fx:'❤️', sfx:'good'}; }},
+  {id:'sleep', ic:'😴', n:()=>'Лечь пораньше', d:()=>'+40 энергии · +2 здоровья · пропуск времени', cd:6000,
    can:()=>true,
-   run(){ S.procr=clamp(S.procr+15); S.energy=clamp(S.energy-2); return {float:'📱 ...'}; }},
+   run(){ S.energy=clamp(S.energy+40); S.health=clamp(S.health+2); advance(4); say('Легли вовремя. Организм в шоке, но благодарен.'); return {float:'💤', fx:'💤', sfx:'good'}; }},
+  {id:'sleepin', ic:'🛌', n:()=>'Поспать до обеда', d:()=>'+80 энергии · утро пропущено · +10 прокрастинации', cd:7000, cls:'bad',
+   can:()=>true,
+   run(){ const wasWork=isWork(); S.energy=clamp(S.energy+80); S.procr=clamp(S.procr+10); advance(8);
+     if(wasWork){ S.pending=Math.max(0,S.pending-1500); say('Проспали смену до обеда. Наташа: выговор и минус 1500 ₽ к зарплате.'); SFX.bad(); }
+     else say('Проспали до обеда. Утренний капучино ушёл без вас.');
+     return {float:'🛌 zzz', fx:'💤'}; }},
+  {id:'energy', ic:'🥤', n:()=>'Энергетик', d:()=>`+энергия, потом отходняк · −3 здоровья · −150 ${PROFILE.currency}`, cd:4000, cls:'bad',
+   can:()=>S.money>=150,
+   run(){ const g=Math.max(10,35-S.caf*0.3); S.money-=150; S.energy=clamp(S.energy+g); S.health=clamp(S.health-3); S.procr=clamp(S.procr-8);
+     S.caf=clamp(S.caf+12); S.crash=Math.max(S.crash,10);
+     say(S.caf>50?'Третий энергетик за день. Сердце передаёт привет.':'Банка энергетика: бодрость на час, отходняк на два.');
+     return {float:`+${Math.round(g)} ⚡`, fx:'⚡', sfx:'good'}; }},
+  {id:'vape', ic:'💨', n:()=>'Электронка', d:()=>`−12 прокрастинации · −2 здоровья · −1 отношений · −350 ${PROFILE.currency}`, cd:3000, cls:'bad',
+   can:()=>S.money>=350,
+   run(){ S.money-=350; S.procr=clamp(S.procr-12); S.health=clamp(S.health-2); S.love=clamp(S.love-1); S.vape=clamp(S.vape+10);
+     if(Math.random()<0.3) say('Анастасия: «Опять дымишь?» Вы: «Это пар». Она: «Это деньги».');
+     return {float:'💨', fx:'💨', sfx:'bad'}; }},
+  {id:'fast', ic:'🍔', n:()=>'Фастфуд после смены', d:()=>`+20 энергии · −4 здоровья · −300 ${PROFILE.currency}`, cd:2000, cls:'bad',
+   can:()=>S.money>=300,
+   run(){ S.money-=300; S.energy=clamp(S.energy+20); S.health=clamp(S.health-4); say('Повар, а ужин — из ближайшей забегаловки. Классика.'); return {float:'🍔', fx:'🍔', sfx:'bad'}; }},
+  {id:'phone', ic:'📱', n:()=>'Полистать ленту', d:()=>'«Ещё пять минуточек» · +15 прокрастинации', cd:1500, cls:'bad',
+   can:()=>true,
+   run(){ S.procr=clamp(S.procr+15); S.energy=clamp(S.energy-2); return {float:'📱 ...', sfx:'bad'}; }},
   {id:'plan', ic:'📝', n:()=>'Составить план дня', d:()=>'−25 прокрастинации · −5 энергии', cd:8000,
    can:()=>S.energy>=5,
-   run(){ S.procr=clamp(S.procr-25); S.energy-=5; return {float:'✔️ план'}; }},
+   run(){ S.procr=clamp(S.procr-25); S.energy-=5; return {float:'✔️ план', fx:'✔️', sfx:'good'}; }},
 ];
-function shawaChance(){ return Math.min(0.85,0.12+S.skill*0.01); }
-function effWage(){ let w=wage(); if(S.procr>60) w*=0.6; if(S.health<30) w*=0.7; return w; }
 
 function doAction(a, ev){
   const now=Date.now();
@@ -213,12 +277,14 @@ function doAction(a, ev){
   if((S.cd[a.id]||0)>now || !a.can()) return;
   const r=a.run()||{};
   S.cd[a.id]=now+a.cd; S.lastAct=now;
-  const av=document.getElementById('avatar'); av.classList.add('bump'); setTimeout(()=>av.classList.remove('bump'),120);
+  if(r.sfx) SFX[r.sfx](); else if(!r.sfx && r.sfx!==null) SFX.click();
+  if(r.fx) spawn(r.fx, 5);
   if(r.float){
     const x=ev&&ev.clientX||innerWidth/2, y=ev&&ev.clientY||innerHeight/2;
-    const el=document.createElement('div'); el.className='float'; el.textContent=r.float; el.style.left=(x-20)+'px'; el.style.top=(y-20)+'px';
+    const el=document.createElement('div'); el.className='float'; el.textContent=r.float; el.style.left=(x-30)+'px'; el.style.top=(y-20)+'px';
     document.body.appendChild(el); setTimeout(()=>el.remove(),1000);
   }
+  bump=6;
   checkState(); render();
 }
 
@@ -234,19 +300,25 @@ function advance(sec){
 }
 function tick(){
   if(paused||S.over) return;
+  const k=speed;
   const idle=(Date.now()-S.lastAct)/1000;
-  S.procr=clamp(S.procr+(idle>10?1.5:0.2));
-  S.energy=clamp(S.energy+0.3);
+  S.procr=clamp(S.procr+(idle>10?1.5:0.2)*k);
+  S.energy=clamp(S.energy+0.3*k);
+  if(S.crash>0){ S.energy=clamp(S.energy-0.9*k); S.crash-=k; if(S.crash<=0) say('Отходняк после энергетика. Хочется лечь на пол кухни.'); }
+  S.caf=clamp(S.caf-0.1*k); S.vape=clamp(S.vape-0.15*k);
+  if(S.vape>50){ S.energy=clamp(S.energy-0.15*k); S.procr=clamp(S.procr+0.3*k); }
   if(S.procr>=100){ S.procr=70; S.energy=clamp(S.energy-15); say('Залипли в телефоне на пару часов. Где время?'); }
-  advance(1);
+  advance(k);
   checkState(); render();
 }
 function endDay(){
   const e=expenses();
-  S.money-=e; S.day++;
+  S.money-=e; S.day++; S.shift=0;
   if(S.payDelay>0){ S.payDelay--; if(S.payDelay===0) pay(); }
   const payday=(S.day%30===1);
   S.love=clamp(S.love-3); S.health=clamp(S.health-1);
+  if(S.caf>50){ S.health=clamp(S.health-2); say('Энергетики бьют по сердцу. Пульс — как у Валеры на самокате.'); }
+  if(S.vape>50){ S.health=clamp(S.health-2); S.love=clamp(S.love-2); say('От вас пахнет вейпом. Анастасия открыла окно.'); }
   if(S.money<0){ S.procr=clamp(S.procr+5); S.health=clamp(S.health-2); say(`Долги давят. Расходы за день: ${fmt(e)}.`); }
   else say(`Расходы за день: ${fmt(e)}.`);
   checkState();
@@ -256,44 +328,48 @@ function endDay(){
   } else if(!S.over && Math.random()<0.4) showEvent();
   save();
 }
-function pay(){ if(S.pending<=0) return; say(`Зарплата пришла: ${fmt(S.pending)}. Невероятно, но факт.`); S.money+=S.pending; S.pending=0; }
+function pay(){ if(S.pending<=0) return; say(`Зарплата пришла: ${fmt(S.pending)}. Невероятно, но факт.`); S.money+=S.pending; S.pending=0; SFX.coin(); spawn('🪙',8); }
 function salaryDelayed(){
   say('Зарплату опять «задерживают».');
-  openModal('💸 Зарплату не дают',`Бухгалтерия: «Деньги будут через ${S.payDelay} дн., там что-то с банком». К выплате: ${fmt(S.pending)}.`,[
+  openModal('💸 Зарплату не дают',`Наташа (админ): «Деньги будут через ${S.payDelay} дн., там что-то с банком». К выплате: ${fmt(S.pending)}.`,[
     {t:'Ждать и питаться макаронами',s:'−3 здоровья',f:()=>{S.health=clamp(S.health-3);say('Макароны, как всегда, спасли ситуацию.');}},
-    {t:'Идти к бухгалтеру и требовать',s:'40% сразу · −15 энергии · −5 здоровья (нервы)',f:()=>{const x=S.pending*0.4;S.money+=x;S.pending-=x;S.energy=clamp(S.energy-15);S.health=clamp(S.health-5);say(`Выбили ${fmt(x)}. Бухгалтерша смотрела как на врага.`);}},
+    {t:'Идти к Наташе и требовать',s:'40% сразу · −15 энергии · −5 здоровья (нервы)',f:()=>{const x=S.pending*0.4;S.money+=x;S.pending-=x;S.energy=clamp(S.energy-15);S.health=clamp(S.health-5);say(`Выбили ${fmt(x)}. Наташа смотрела как на врага.`);}},
     {t:'Занять у Анастасии',s:'+10 000 · −12 отношений («мы же копили!»)',f:()=>{S.money+=10000;S.love=clamp(S.love-12);say('Заняли у Анастасии. Обещали отдать «со дня на день».');}}]);
 }
 function checkState(){
   if(S.health<=0){
     S.health=40; S.energy=50; S.money-=3000; S.dayT=0; S.day+=2;
-    say('Выгорание. Пара дней в больнице, −3000. Берегите себя.');
+    say('Выгорание. Пара дней в больнице, −3000. Берегите себя.'); SFX.bad();
   }
   if(S.love<=0 && !S.over){
-    S.over=true;
-    openModal('💔 Расставание','Вы так много работали и так мало замечали партнёра, что отношения закончились. Финансовая свобода без близких — не то, чего хотелось.',
+    S.over=true; SFX.bad();
+    openModal('💔 Расставание','Вы так много работали и так мало замечали Анастасию, что отношения закончились. Ни переезд, ни свобода без неё — не то, чего хотелось.',
       [{t:'Начать заново',f:()=>{S=newState();save();render();}}]);
   }
-  const free=passive()>=expenses();
-  if(free && S.health>=30 && S.love>=30 && !S.won){
-    S.won=true;
-    openModal('🎉 Финансовая свобода!',`День ${S.day}. Пассивный доход ${fmt(passive())}/день покрывает расходы ${fmt(expenses())}/день, а здоровье и отношения на месте. Вы сделали это!`,
+  if(!S.moved && S.money>=PROFILE.moveMoney && S.lang>=PROFILE.moveLang && S.love>=50 && S.health>=30){
+    S.moved=true; SFX.win();
+    openModal('✈️ Вы переехали!',`День ${S.day}. Деньги собраны, язык выучен, Анастасия летит с вами. Новая страна, новая кухня — и, надеюсь, шаурма, которая получается.`,
+      [{t:'Продолжить играть',f:()=>{}},{t:'Начать заново',f:()=>{S=newState();save();render();}}]);
+  }
+  if(passive()>=expenses() && S.health>=30 && S.love>=30 && !S.won){
+    S.won=true; SFX.win();
+    openModal('🎉 Финансовая свобода!',`День ${S.day}. Пассивный доход ${fmt(passive())}/день покрывает расходы ${fmt(expenses())}/день. Вы сделали это!`,
       [{t:'Продолжить играть',f:()=>{}},{t:'Начать заново',f:()=>{S=newState();save();render();}}]);
   }
 }
 
 /* ====== События ====== */
 const EVENTS = [
-  {t:'🎬 Партнёр зовёт в кино',p:'«Давай сегодня куда-нибудь выберемся?»',c:[
+  {t:'🎬 Анастасия зовёт в кино',p:'«Давай сегодня куда-нибудь выберемся?»',c:[
     {t:'Пойти',s:`−1500 ${PROFILE.currency}, −10 энергии, +15 отношений`,f(){S.money-=1500;S.energy=clamp(S.energy-10);S.love=clamp(S.love+15);}},
-    {t:'«Устал(а), останусь с телефоном»',s:'−10 отношений, +15 прокрастинации',f(){S.love=clamp(S.love-10);S.procr=clamp(S.procr+15);}}]},
-  {t:'🍕 Скидка на доставку',p:'Приложение шепчет: «Только сегодня −50%».',c:[
+    {t:'«Устал, останусь с телефоном»',s:'−10 отношений, +15 прокрастинации',f(){S.love=clamp(S.love-10);S.procr=clamp(S.procr+15);}}]},
+  {t:'🍕 Скидка на доставку',p:'Приложение шепчет: «Только сегодня −50%». Да, вы работаете в доставке, но готовить лень.',c:[
     {t:'Заказать пиццу',s:`−700 ${PROFILE.currency}, +25 энергии, −8 здоровья`,f(){S.money-=700;S.energy=clamp(S.energy+25);S.health=clamp(S.health-8);}},
     {t:'Приготовить дома',s:'−10 энергии, +4 здоровья (вы же повар!)',f(){S.energy=clamp(S.energy-10);S.health=clamp(S.health+4);}}]},
-  {t:'⏱️ Сверхурочные',p:'Шеф просит выйти на подмену.',c:[
+  {t:'⏱️ Наташа: заказов навалило',p:'Админ просит выйти на подмену. «Ну ты же повар, ты можешь».',c:[
     {t:'Согласиться',s:`+3000 ${PROFILE.currency}, −30 энергии`,f(){S.money+=3000;S.energy=clamp(S.energy-30);}},
     {t:'Отказаться',s:'Ничего не меняется',f(){}}]},
-  {t:'🏃 Друг зовёт на пробежку',p:'«Утром, в семь. Без отговорок!»',c:[
+  {t:'🛵 Валера зовёт на пробежку',p:'«Я курьер, я уже пробежал 20 км сегодня. Пошли?»',c:[
     {t:'Побежать',s:'+10 здоровья, −15 энергии',f(){S.health=clamp(S.health+10);S.energy=clamp(S.energy-15);}},
     {t:'«С завтрашнего дня»',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
   {t:'🤧 Простуда',p:'Кухня — сквозняки и пар. Вы заболели.',c:[
@@ -304,7 +380,7 @@ const EVENTS = [
   {t:'💡 Идея нового блюда',p:'Придумали сочетание, которого нет ни в одной книге.',c:[
     {t:'Записать в блог',s:'+3 навыка, −5 энергии',f(){S.skill+=3;S.energy=clamp(S.energy-5);}},
     {t:'Забыть к вечеру',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
-  {t:'🎁 Премия от шефа',p:'Заметили вашу работу. (Невероятно.)',c:[
+  {t:'🎁 Премия от ZakaZoom',p:'Наташа нашла ваш бонус в системе. (Невероятно.)',c:[
     {t:'Принять',s:`+2000 ${PROFILE.currency}`,f(){S.money+=2000;}}]},
   {t:'🌯 Шаурма на пробу',p:'Анастасия просит попробовать вашу очередную шаурму. Вид у неё скептический.',c:[
     {t:'Честно: «Опять не получилась»',s:'+3 навыка, +5 отношений',f(){S.skill+=3;S.love=clamp(S.love+5);}},
@@ -312,31 +388,119 @@ const EVENTS = [
   {t:'💥 Крипер у дома',p:'Вечером в Майнкрафте крипер подкрался к вашему дому.',c:[
     {t:'Починить с Анастасией',s:'+10 отношений, −10 энергии',f(){S.love=clamp(S.love+10);S.energy=clamp(S.energy-10);}},
     {t:'Свалить на Анастасию',s:'−8 отношений',f(){S.love=clamp(S.love-8);}}]},
-  {t:'🍽️ Заказ на банкет',p:'Знакомые просят приготовить на день рождения.',c:[
-    {t:'Взять заказ',s:`+4000 ${PROFILE.currency}, −25 энергии`,f(){S.money+=4000;S.energy=clamp(S.energy-25);}},
+  {t:'🍽️ Заказ на банкет',p:'Знакомые просят приготовить домашний ужин на день рождения. Домашняя еда — ваш конёк.',c:[
+    {t:'Взять заказ',s:`+4000 ${PROFILE.currency}, −25 энергии, +2 навыка`,f(){S.money+=4000;S.energy=clamp(S.energy-25);S.skill+=2;}},
     {t:'Отказаться: «выходной»',s:'Ничего не меняется',f(){}}]},
+  {t:'📦 Валера опоздал с доставкой',p:'Заказ остыл, клиент в ярости, а виноват, конечно, «повар, который долго готовил».',c:[
+    {t:'Прикрыть Валеру',s:'−10 энергии',f(){S.energy=clamp(S.energy-10);}},
+    {t:'Объяснить, как было на самом деле',s:'−3 здоровья (нервы), +5 прокрастинации',f(){S.health=clamp(S.health-3);S.procr=clamp(S.procr+5);}}]},
+  {t:'🧾 Наташа не внесла заказ',p:'Пятнадцать заказов прилетели разом. На кухне хаос и крики.',c:[
+    {t:'Готовить всё сразу',s:`+1000 ${PROFILE.currency}, −20 энергии`,f(){S.money+=1000;S.energy=clamp(S.energy-20);}},
+    {t:'Разобраться с Наташей',s:'−5 прокрастинации, −8 энергии',f(){S.procr=clamp(S.procr-5);S.energy=clamp(S.energy-8);}}]},
+  {t:'🥤 Акция в магазине',p:'«Три энергетика по цене двух!» Рука сама тянется к холодильнику.',c:[
+    {t:'Взять',s:'+40 энергии, −5 здоровья, тяга к энергетикам +15',f(){S.energy=clamp(S.energy+40);S.health=clamp(S.health-5);S.caf=clamp(S.caf+15);}},
+    {t:'Пройти мимо',s:'+5 здоровья',f(){S.health=clamp(S.health+5);}}]},
+  {t:'💨 Перекур у кухни',p:'Валера достал электронку: «Будешь? Это почти не вредно».',c:[
+    {t:'Затянуться',s:'−8 прокрастинации, тяга +10',f(){S.procr=clamp(S.procr-8);S.vape=clamp(S.vape+10);}},
+    {t:'Отказаться',s:'+3 здоровья, тяга −10',f(){S.health=clamp(S.health+3);S.vape=clamp(S.vape-10);}}]},
+  {t:'🌍 Билеты в другую страну',p:'Анастасия показывает экран: «Смотри, какая страна! Давай хотя бы попробуем?»',c:[
+    {t:'«Давай, учим язык вместе»',s:'+6 к языку, +8 отношений, −5 энергии',f(){S.lang+=6;S.love=clamp(S.love+8);S.energy=clamp(S.energy-5);}},
+    {t:'«Потом, сначала сериал»',s:'+10 прокрастинации',f(){S.procr=clamp(S.procr+10);}}]},
 ];
 function showEvent(){
   const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];
+  SFX.ev();
   openModal(e.t,e.p,e.c.map(c=>({t:c.t,s:c.s,f:()=>{c.f();say(e.t.replace(/^\S+\s/,'')+': '+c.t+'.');checkState();}})));
 }
+const modalQ=[];
 function openModal(title,text,choices){
+  if(document.getElementById('modal').classList.contains('on')){ modalQ.push([title,text,choices]); return; }
   paused=true;
   document.getElementById('mT').textContent=title;
   document.getElementById('mP').textContent=text;
   const box=document.getElementById('mC'); box.innerHTML='';
   choices.forEach(c=>{
     const b=document.createElement('button'); b.className='choice';
-    b.innerHTML=''; b.append(c.t);
+    b.append(c.t);
     if(c.s){ const s=document.createElement('small'); s.textContent=c.s; b.append(s); }
-    b.onclick=()=>{ document.getElementById('modal').classList.remove('on'); paused=false; c.f(); S.lastAct=Date.now(); render(); save(); };
+    b.onclick=()=>{
+      document.getElementById('modal').classList.remove('on'); paused=false; c.f(); S.lastAct=Date.now(); SFX.click();
+      const nx=modalQ.shift(); if(nx) openModal(...nx);
+      render(); save();
+    };
     box.append(b);
   });
   document.getElementById('modal').classList.add('on');
 }
 
+/* ====== Сцена (пиксель-арт на canvas) ====== */
+const cv=document.getElementById('scene'), cx=cv.getContext('2d');
+const parts=[]; let bump=0;
+function spawn(txt,n){ for(let i=0;i<n;i++) parts.push({x:150+Math.random()*30,y:96,vx:(Math.random()-0.5)*1.6,vy:-1-Math.random()*1.6,life:50+Math.random()*20,t:txt}); }
+const mix=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+const rgb=c=>`rgb(${c[0]},${c[1]},${c[2]})`;
+const STARS=Array.from({length:30},(_,i)=>[(i*97)%320,(i*53)%90]);
+function drawChar(x,y,body,hair,hat,bob){
+  y+=bob;
+  cx.fillStyle='#2b3a67'; cx.fillRect(x+1,y-8,4,8); cx.fillRect(x+6,y-8,4,8);
+  cx.fillStyle=body; cx.fillRect(x,y-19,11,11);
+  cx.fillStyle='#f1c27d'; cx.fillRect(x+1,y-27,9,8);
+  cx.fillStyle='#222'; cx.fillRect(x+3,y-24,1,2); cx.fillRect(x+7,y-24,1,2);
+  if(hair){ cx.fillStyle=hair; cx.fillRect(x,y-29,11,4); cx.fillRect(x,y-27,2,8); cx.fillRect(x+9,y-27,2,8); }
+  if(hat){ cx.fillStyle='#fff'; cx.fillRect(x,y-31,11,5); cx.fillRect(x+1,y-34,9,4); }
+}
+function drawScene(ts){
+  const hh=hourNow();
+  const L=(hh>=6&&hh<=20)?Math.sin((hh-6)/14*Math.PI):0;
+  let sky=mix([11,16,48],[110,198,255],Math.min(1,L*1.8));
+  if(L>0&&L<0.35) sky=mix(sky,[255,150,90],(0.35-L)*1.6);
+  cx.save();
+  if(shake>0){ cx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake); shake=Math.max(0,shake-0.5); }
+  cx.fillStyle=rgb(sky); cx.fillRect(-10,-10,340,130);
+  if(L<0.3){ cx.fillStyle='#fff'; STARS.forEach(([x,y],i)=>{ if(Math.sin(ts/400+i)>-0.4) cx.fillRect(x,y,1,1); }); }
+  if(hh>=6&&hh<=20){ const p=(hh-6)/14; cx.fillStyle='#ffe066'; cx.fillRect(20+p*280,90-Math.sin(p*Math.PI)*72,14,14); }
+  else { const p=(((hh<6)?hh+24:hh)-20)/10; cx.fillStyle='#e8e8f0'; cx.fillRect(20+p*280,90-Math.sin(p*Math.PI)*60,12,12); cx.fillStyle=rgb(sky); cx.fillRect(20+p*280+7,90-Math.sin(p*Math.PI)*60+1,5,5); }
+  cx.fillStyle=`rgba(255,255,255,${0.25+L*0.5})`;
+  for(let i=0;i<3;i++){ const x=((ts/90+i*130)%380)-40; cx.fillRect(x,18+i*14,26,6); cx.fillRect(x+6,14+i*14,14,5); }
+  // земля
+  cx.fillStyle='#5aa832'; cx.fillRect(0,112,320,8);
+  cx.fillStyle='#4a8a28'; for(let x=0;x<320;x+=16) cx.fillRect(x,112,8,2);
+  cx.fillStyle='#7a5230'; cx.fillRect(0,120,320,30);
+  cx.fillStyle='#664225'; for(let y=124;y<150;y+=8) for(let x=((y/8)%2)*8;x<320;x+=16) cx.fillRect(x,y,8,4);
+  // вывеска места
+  cx.fillStyle='#222'; cx.fillRect(122,70,76,14); cx.fillStyle=isWork()?'#ffd166':'#7ee787'; cx.font='8px "Press Start 2P",monospace'; cx.textBaseline='top';
+  cx.fillText(isWork()?'ZAKAZOOM':'  ДОМ  ',126,73);
+  cx.fillStyle='#555'; cx.fillRect(158,84,4,28);
+  // активы
+  cx.textBaseline='alphabetic';
+  UPGRADES.forEach((u,i)=>{
+    const n=owned(u.id); if(!n) return;
+    const x=6+i*44, h=18+Math.min(n,6)*2;
+    cx.fillStyle=u.col; cx.fillRect(x,112-h,34,h);
+    cx.fillStyle='rgba(0,0,0,.35)'; cx.fillRect(x-2,112-h-4,38,5);
+    cx.fillStyle='#ffe9a8'; cx.fillRect(x+4,112-h+5,5,5); cx.fillRect(x+24,112-h+5,5,5);
+    cx.font='14px serif'; cx.fillText(u.ic,x+10,112-4);
+    cx.font='7px "Press Start 2P",monospace'; cx.fillStyle='#fff'; cx.fillText('x'+n,x+2,112-h-6);
+  });
+  // герои
+  const bob=Math.sin(ts/300)*1.2 - (bump>0?bump*0.4:0); if(bump>0) bump--;
+  drawChar(144,136,'#eeeeee',null,true,bob);
+  drawChar(172,136,'#ff8fab','#7a3b1d',false,Math.sin(ts/300+1)*1.2);
+  // подпись
+  cx.font='7px "Press Start 2P",monospace'; cx.fillStyle='#fff'; cx.fillText('Я',146,142); cx.fillText('Настя',163,142);
+  // настроение
+  const mood=S.over?'💔':S.energy<15?'😵':S.health<30?'🤒':S.procr>70?'🥱':(S.love>75&&S.health>60)?'😊':'';
+  if(mood){ cx.font='14px serif'; cx.fillText(mood,146,92+bob); }
+  // частицы
+  cx.font='12px serif';
+  for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.04; p.life--; cx.globalAlpha=Math.min(1,p.life/20); cx.fillText(p.t,p.x,p.y); if(p.life<=0) parts.splice(i,1); }
+  cx.globalAlpha=1;
+  cx.restore();
+}
+function frame(ts){ drawScene(ts); requestAnimationFrame(frame); }
+
 /* ====== Интерфейс ====== */
-const BARS=[['energy','⚡ Энергия','--energy'],['health','❤️ Здоровье','--health'],['love','💕 Анастасия','--love'],['procr','📱 Прокрастинация','--procr']];
+const BARS=[['energy','⚡ Энергия','--energy'],['health','❤️ Здоровье','--health'],['love','💕 Анастасия','--love'],['procr','📱 Прокрастинация','--procr'],['caf','🥤 Тяга к энергетикам','--caf'],['vape','💨 Тяга к электронке','--vape']];
 function build(){
   const bars=document.getElementById('bars');
   BARS.forEach(([id,n,c])=>{
@@ -344,7 +508,7 @@ function build(){
   });
   const acts=document.getElementById('actions');
   ACTIONS.forEach(a=>{
-    const b=document.createElement('button'); b.className='act'+(a.main?' main':''); b.id='a_'+a.id;
+    const b=document.createElement('button'); b.className='act'+(a.main?' main':'')+(a.cls?' '+a.cls:''); b.id='a_'+a.id;
     b.innerHTML=`<div class="n">${a.ic} <span id="an_${a.id}"></span></div><div class="d" id="ad_${a.id}"></div><div class="cd" id="ac_${a.id}"></div>`;
     b.addEventListener('click',ev=>doAction(a,ev));
     acts.append(b);
@@ -355,17 +519,19 @@ function build(){
     b.innerHTML=`<span class="ic">${u.ic}</span><span><span class="n" id="un_${u.id}"></span><br><span class="d">${u.d} · +${fmt(u.inc)}/день</span></span><span class="p" id="up_${u.id}"></span>`;
     b.onclick=()=>{
       const c=upCost(u); if(paused||S.over||S.money<c) return;
-      S.money-=c; S.owned[u.id]=owned(u.id)+1; say(`Куплено: ${u.n}.`); checkState(); render(); save();
+      S.money-=c; S.owned[u.id]=owned(u.id)+1; say(`Куплено: ${u.n}.`); SFX.coin(); spawn(u.ic,6); checkState(); render(); save();
     };
     ups.append(b);
   });
   document.getElementById('promo').onclick=()=>{
     const nx=S.career+1; if(paused||S.over||nx>=PROFILE.monthSalary.length||S.skill<PROFILE.skillNeeded[nx]) return;
-    S.career=nx; say(`Повышение! Теперь вы — ${PROFILE.careerNames[nx]}.`); checkState(); render(); save();
+    S.career=nx; say(`Повышение! Теперь вы — ${PROFILE.careerNames[nx]}. Наташа в шоке.`); SFX.win(); spawn('⭐',10); checkState(); render(); save();
   };
   document.getElementById('btnReset').onclick=()=>{
     if(confirm('Сбросить прогресс и начать заново?')){ S=newState(); save(); render(); }
   };
+  document.getElementById('btnSound').onclick=e=>{ muted=!muted; e.target.textContent=muted?'🔇':'🔊'; if(!muted) SFX.click(); };
+  document.getElementById('btnSpeed').onclick=e=>{ speed=speed===1?2:speed===2?4:1; e.target.textContent='x'+speed; };
 }
 function render(){
   const m=document.getElementById('money');
@@ -374,7 +540,7 @@ function render(){
   document.getElementById('career').textContent=`${PROFILE.careerNames[S.career]} · навык ${S.skill.toFixed(1)} · оклад ${fmt(PROFILE.monthSalary[S.career])}/мес`;
   document.getElementById('salary').textContent=`К выплате: ${fmt(S.pending)}`+(S.payDelay>0?` · задержка ещё ${S.payDelay} дн. 🙄`:` · до зарплаты ${((31-S.day%30)%30)||30} дн.`);
   document.getElementById('dayBar').style.width=(S.dayT/PROFILE.dayLength*100)+'%';
-  const hh=(PROFILE.wakeHour+S.dayT/PROFILE.dayLength*24)%24, H=Math.floor(hh), M=Math.floor((hh-H)*60/10)*10;
+  const hh=hourNow(), H=Math.floor(hh), M=Math.floor((hh-H)*60/10)*10;
   document.getElementById('dayTxt').textContent=`${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][(S.day-1)%7]}, день ${S.day} · ${String(H).padStart(2,'0')}:${String(M).padStart(2,'0')} · ${isWork()?'🔪 рабочий день':'🎮 выходной'}`;
   BARS.forEach(([id])=>{
     document.getElementById('bv_'+id).textContent=Math.round(S[id]);
@@ -403,16 +569,17 @@ function render(){
     document.getElementById('promoN').textContent='Вершина карьеры'; document.getElementById('promoD').textContent='Выше только свой ресторан';
     document.getElementById('promoP').textContent='🏆'; pr.disabled=true;
   }
+  const rm=Math.min(1,Math.max(0,S.money)/PROFILE.moveMoney), rl=Math.min(1,S.lang/PROFILE.moveLang), rlv=Math.min(1,S.love/50);
+  document.getElementById('moveBar').style.width=((rm+rl+rlv)/3*100)+'%';
+  document.getElementById('moveTxt').textContent=`Деньги ${fmt(Math.max(0,S.money))} из ${fmt(PROFILE.moveMoney)} · язык ${Math.floor(S.lang)}/${PROFILE.moveLang} · Анастасия ${Math.round(S.love)}/50`+(S.moved?' · ПЕРЕЕХАЛИ 🎉':'');
   const ratio=Math.min(1,passive()/expenses());
   document.getElementById('freeBar').style.width=(ratio*100)+'%';
   document.getElementById('freeTxt').textContent=`${Math.round(ratio*100)}% · ${fmt(passive())} из ${fmt(expenses())} в день`+(S.won?' · ЦЕЛЬ ДОСТИГНУТА 🎉':'');
-  document.getElementById('city').textContent=UPGRADES.map(u=>u.ic.repeat(Math.min(owned(u.id),6))).join('')||'🏠';
   document.getElementById('log').innerHTML=S.log.map(l=>`<div>${l.replace(/</g,'&lt;')}</div>`).join('')||'<div>Пока тихо. Начните смену!</div>';
-  const av=document.getElementById('avatar');
-  av.textContent=S.over?'💔':S.energy<15?'😵‍💫':S.health<30?'🤒':S.procr>70?'🥱':S.love>75&&S.health>60?'😊':'🧑‍🍳';
 }
 
 build(); render();
+requestAnimationFrame(frame);
 setInterval(tick,1000);
 setInterval(render,150);
 setInterval(save,10000);
